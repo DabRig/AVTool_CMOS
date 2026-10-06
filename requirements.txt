@@ -1,0 +1,5 @@
+# Shared by every computer. Install with the setup script, not by hand.
+tqdm>=4.66            # progress bars
+python-docx>=1.1      # Word (.docx) transcripts
+huggingface_hub>=0.23 # one-time model download
+tomli>=2.0; python_version < "3.11"   # reads config.toml on older Python

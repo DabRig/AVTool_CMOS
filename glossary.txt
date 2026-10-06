@@ -1,0 +1,10 @@
+# Names and terms Whisper should spell correctly. One per line.
+# Keep this short (a few dozen terms at most) — a long list can make Whisper
+# invent or repeat lines.
+#
+# If Whisper keeps mishearing something, add a fix like this:
+#     wrong spelling -> Right Spelling
+#
+Evan
+Smooth Scaling
+Lightning OS

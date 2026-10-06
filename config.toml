@@ -1,0 +1,19 @@
+# AVTool settings. Anything typed on the command line overrides these.
+# Lines starting with # are notes and are ignored.
+
+model = "large-v3-turbo"   # best quality. "medium" or "small" = faster drafts
+lang = "en"                # "en" = English. "auto" = detect from the first 30 seconds
+backend = "auto"           # auto picks the fastest engine for this computer
+audio_track = 0            # 0 = automatic (first usable track); 1, 2... = that track
+recursive = false          # true = also look inside subfolders
+out = ""                   # "" = transcripts go next to each video
+                           # e.g. out = "~/Documents/Transcripts"
+captions = "standard"      # "standard" (Premiere/CapCut, 42 chars x 2 lines) or "reels"
+glossary = "glossary.txt"  # names/terms to spell right
+formats = ["txt", "timestamped", "srt", "vtt", "docx", "json"]
+boost_quiet = false        # true = lift quiet voices (audience questions far from the mic)
+keep_awake = true          # stop the Mac sleeping during a long batch
+
+# Use a different audio track for particular files:
+[audio_tracks]
+# "IMG_0042.MOV" = 2

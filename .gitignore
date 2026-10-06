@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+samples/clips/
+*.partial
+.DS_Store
+._*

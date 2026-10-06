@@ -1,0 +1,4 @@
+# Windows/Linux with an NVIDIA GPU: faster-whisper with CUDA libraries.
+-r requirements-cpu.txt
+nvidia-cublas-cu12
+nvidia-cudnn-cu12==9.*

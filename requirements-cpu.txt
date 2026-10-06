@@ -1,0 +1,3 @@
+# Intel Mac, Windows or Linux without an NVIDIA GPU: faster-whisper on the CPU.
+-r requirements.txt
+faster-whisper>=1.1.0
