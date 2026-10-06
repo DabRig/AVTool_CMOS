@@ -6,7 +6,7 @@ Renders:
   out/sig.png      handwritten-style signature
 
 Usage:  python3 build.py ["Script line on the banner"]
-Needs Pillow, numpy and ffmpeg. Fonts (all SIL OFL) are fetched once into ./fonts.
+Needs Pillow, numpy and ffmpeg; gifsicle (optional) shrinks the GIFs. Fonts (all SIL OFL) are fetched once into ./fonts.
 """
 import math
 import os
@@ -17,7 +17,7 @@ import tempfile
 import urllib.request
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONTS = os.path.join(HERE, "fonts")
@@ -31,8 +31,9 @@ FONT_URLS = {
 }
 
 W, H = 1120, 560          # hero rendered at 2x, shown at 560x280
-FRAMES = 36
-FRAME_MS = 70
+FRAMES = 24
+FRAME_MS = 90
+HERO_OUT_W = 840        # 1.5x of the 560px display width; keeps the GIF small enough to embed
 BRAND_BLUE = (5, 102, 255)
 
 
@@ -73,8 +74,8 @@ def space_background(rng):
     t = yy / H
     base += np.stack([4 + 6 * (1 - t), 8 + 10 * (1 - t), 22 + 28 * (1 - t)], -1)
     # nebula clouds: blue and violet, kept faint so text stays crisp
-    n1 = soft_noise(rng, H, W, 90) * soft_noise(rng, H, W, 40)
-    n2 = soft_noise(rng, H, W, 120) * soft_noise(rng, H, W, 50)
+    n1 = soft_noise(rng, H, W, 110) * soft_noise(rng, H, W, 70)
+    n2 = soft_noise(rng, H, W, 140) * soft_noise(rng, H, W, 80)
     base += n1[..., None] * np.array([10, 60, 170], np.float32) * 0.9
     base += n2[..., None] * np.array([90, 30, 140], np.float32) * 0.7
     # glow behind the logo
@@ -112,6 +113,12 @@ def add_sprite(img, x, y, sprite, color, amp):
     img[y0 + ys0:y0 + ys1, x0 + xs0:x0 + xs1] += patch
 
 
+def flare(f, start, dur):
+    """0 outside a star's flare window, a smooth 0->1->0 bump inside it (wraps around the loop)."""
+    p = (f - start) % FRAMES
+    return math.sin(math.pi * (p + 1) / (dur + 1)) ** 2 if p < dur else 0.0
+
+
 def load_logo(size):
     logo = Image.open(LOGO).convert("RGBA")
     logo = logo.crop(logo.getbbox())
@@ -131,22 +138,21 @@ def build_hero(script_line):
 
     star_colors = [(255, 255, 255), (190, 215, 255), (255, 236, 205), (170, 200, 255)]
     twinklers = []
-    for _ in range(170):
+    for _ in range(150):
         twinklers.append(dict(
             x=rng.random() * W, y=rng.random() * H,
             r=0.7 + rng.random() * 0.9,
             col=star_colors[rng.integers(len(star_colors))],
-            base=0.25 + rng.random() * 0.35,
-            amp=0.5 + rng.random() * 0.6,
-            k=int(rng.integers(1, 3)),          # cycles per loop -> seamless
-            ph=rng.random() * 2 * math.pi))
+            base=0.3 + rng.random() * 0.3,
+            amp=0.6 + rng.random() * 0.6,
+            start=int(rng.integers(FRAMES)), dur=int(rng.integers(4, 7))))
     sparkles = []
-    for _ in range(14):
+    for _ in range(16):
         sparkles.append(dict(
             x=rng.random() * W, y=rng.random() * H,
             r=1.3 + rng.random() * 0.8,
             col=star_colors[rng.integers(len(star_colors))],
-            k=1, ph=rng.random() * 2 * math.pi))
+            start=int(rng.integers(FRAMES)), dur=8))
     # keep the brightest sparkles clear of the text block
     sparkles = [s for s in sparkles if not (280 < s["y"] < 500 and 120 < s["x"] < W - 120)]
 
@@ -186,28 +192,28 @@ def build_hero(script_line):
         t = f / FRAMES
         img = bg.copy()
         for s in twinklers:
-            a = s["base"] + s["amp"] * (0.5 + 0.5 * math.sin(2 * math.pi * s["k"] * t + s["ph"])) ** 3
+            a = s["base"] + s["amp"] * flare(f, s["start"], s["dur"])
             add_sprite(img, s["x"], s["y"], star_sprite(s["r"], False), s["col"], a)
         for s in sparkles:
-            a = 0.15 + 0.95 * (0.5 + 0.5 * math.sin(2 * math.pi * t + s["ph"])) ** 4
+            a = 0.2 + 0.9 * flare(f, s["start"], s["dur"])
             add_sprite(img, s["x"], s["y"], star_sprite(s["r"] * (0.8 + 0.5 * a), True), s["col"], a)
-        # shooting star across the upper right, frames 6..18
-        st = (f - 6) / 12
+        # shooting star across the upper right, frames 4..12
+        st = (f - 4) / 8
         if 0 <= st <= 1:
             hx, hy = 760 + 300 * st, 40 + 110 * st
-            for i in range(40):
-                fade = (1 - i / 40) * math.sin(math.pi * st)
-                add_sprite(img, hx - i * 5.2, hy - i * 1.9, star_sprite(0.9, False),
-                           (230, 240, 255), fade * 0.9)
+            for i in range(150):     # dense samples so the trail reads as one streak
+                fade = (1 - i / 150) ** 1.5 * math.sin(math.pi * st)
+                add_sprite(img, hx - i * 1.4, hy - i * 0.51, star_sprite(0.8, False),
+                           (230, 240, 255), fade * 0.45)
             add_sprite(img, hx, hy, star_sprite(1.4, True), (255, 255, 255), math.sin(math.pi * st))
 
         frame = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)).convert("RGBA")
         frame = Image.alpha_composite(frame, halo)
         frame = Image.alpha_composite(frame, rim)
 
-        # glint sweeping across the logo, frames 20..32
+        # glint sweeping across the logo, frames 14..21
         la = logo_arr.copy()
-        gt = (f - 20) / 12
+        gt = (f - 14) / 7
         if 0 <= gt <= 1:
             yy, xx = np.mgrid[0:logo.height, 0:logo.width].astype(np.float32)
             band = (xx + yy * 0.6) - (gt * (logo.width + logo.height * 0.6 + 120) - 60)
@@ -217,16 +223,16 @@ def build_hero(script_line):
 
         frame = Image.alpha_composite(frame, shadow)
         frame = Image.alpha_composite(frame, text)
-        frames.append(frame.convert("RGB"))
+        frames.append(frame.convert("RGB").resize((HERO_OUT_W, HERO_OUT_W // 2), Image.LANCZOS))
     return frames
 
 
 def build_divider():
-    w, h = 1200, 36
+    w, h = 900, 27     # 1.5x of the 600x18 display size
     rng = np.random.default_rng(3)
     xs = np.linspace(0, 1, w)
-    pts = [(int(rng.random() * w), 0.6 + rng.random() * 0.8, rng.random() * 2 * math.pi)
-           for _ in range(16)]
+    pts = [(int(40 + rng.random() * (w - 80)), 0.7 + rng.random() * 0.8, int(rng.integers(FRAMES)))
+           for _ in range(14)]
     frames = []
     for f in range(FRAMES):
         t = f / FRAMES
@@ -242,8 +248,10 @@ def build_divider():
             img[row] = img[row] * (1 - mix) + col * mix
             img[row] = img[row] + (255 - img[row]) * (glint[:, None] * a * 0.9)
         # tiny four-point sparkles that pulse along the line
-        for x, r, ph in pts:
-            a = (0.5 + 0.5 * math.sin(2 * math.pi * t + ph)) ** 2
+        for x, r, start in pts:
+            a = flare(f, start, 8)
+            if a == 0:
+                continue
             spr = star_sprite(r, True)
             s = spr.shape[0]
             c = s // 2
@@ -258,14 +266,17 @@ def build_divider():
 
 
 def build_signature():
+    """Ink on white (the signature always sits on the white card), quantized to keep it tiny."""
     f = font("Signature.ttf", 120)
-    img = Image.new("RGBA", (900, 170), (255, 255, 255, 0))
+    img = Image.new("RGB", (900, 170), (255, 255, 255))
     d = ImageDraw.Draw(img)
-    d.text((34, 112), "Sebastian Success", font=f, fill=(18, 48, 140, 255), anchor="ls")
-    return img.crop(img.getbbox())
+    d.text((34, 112), "Sebastian Success", font=f, fill=(18, 48, 140), anchor="ls")
+    box = ImageOps.invert(img).getbbox()
+    img = img.crop((box[0] - 4, box[1] - 4, box[2] + 4, box[3] + 4))
+    return img.quantize(colors=24, method=Image.Quantize.MEDIANCUT)
 
 
-def write_gif(frames, path):
+def write_gif(frames, path, lossy=60):
     tmp = tempfile.mkdtemp()
     try:
         for i, fr in enumerate(frames):
@@ -277,8 +288,10 @@ def write_gif(frames, path):
                         "-vf", "palettegen=max_colors=256:stats_mode=full", palette], check=True)
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(fps), "-i", pattern,
                         "-i", palette, "-lavfi",
-                        "paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle",
+                        "paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle",
                         "-loop", "0", path], check=True)
+        if shutil.which("gifsicle"):
+            subprocess.run(["gifsicle", "-O3", f"--lossy={lossy}", "-b", path], check=True)
     finally:
         shutil.rmtree(tmp)
 
@@ -288,9 +301,9 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     hero = build_hero(script_line)
     write_gif(hero, os.path.join(OUT, "hero.gif"))
-    hero[2].save(os.path.join(OUT, "hero-still.png"))
+    hero[0].save(os.path.join(OUT, "hero-still.png"))
     write_gif(build_divider(), os.path.join(OUT, "divider.gif"))
-    build_signature().save(os.path.join(OUT, "sig.png"))
+    build_signature().save(os.path.join(OUT, "sig.png"), optimize=True)
     for n in ("hero.gif", "divider.gif", "sig.png"):
         print(n, os.path.getsize(os.path.join(OUT, n)) // 1024, "KB")
 
