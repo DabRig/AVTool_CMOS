@@ -1,0 +1,130 @@
+<title>Sebastian Success Email</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: a night-sky console. Steps and the Copy button on the left, the live email on the right; stacks on phones. */
+:root {
+  --space: #060a1a;
+  --panel: #0d1430;
+  --line: #24305e;
+  --ink: #e9edfb;
+  --muted: #9aa6cf;
+  --brand: #0566ff;
+  --brand-hi: #4d93ff;
+  --ok: #6fe3a8;
+  --display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--space);
+  color: var(--ink);
+  font: 16px/1.55 var(--body);
+  padding-inline: 16px;
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items: start; }
+.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); display: grid; gap: 20px; min-width: 0; }
+h1 { font: 600 1.55rem/1.2 var(--display); letter-spacing: 0.12em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; letter-spacing: 0.02em; }
+.copy {
+  appearance: none; border: 0; cursor: pointer; width: 100%;
+  font: 600 1.05rem/1 var(--body); letter-spacing: 0.02em;
+  color: #fff; background: var(--brand);
+  padding: 16px 18px; border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 24px rgba(5,102,255,0.35);
+  transition: background 0.15s, transform 0.1s;
+}
+.copy:hover { background: var(--brand-hi); }
+.copy:active { transform: translateY(1px); }
+.copy:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.status { min-height: 1.5em; margin: -8px 0 0; color: var(--ok); font-weight: 600; }
+.status.warn { color: #ffc46b; }
+ol { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 14px; }
+ol li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; }
+ol li::before {
+  content: counter(step); font: 600 0.85rem/30px var(--display); text-align: center;
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); color: var(--brand-hi);
+}
+kbd { font: 600 0.85em var(--body); padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--panel); }
+.note { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--line); padding-top: 16px; margin: 0; }
+.preview { min-width: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #F4F4F2; }
+.preview table { max-width: 100% !important; }
+.preview-label { font: 600 0.72rem/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+@media (max-width: 820px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { .copy { transition: none; } }
+</style>
+
+<div class="wrap">
+  <section class="side" aria-labelledby="t">
+    <div>
+      <h1 id="t">Sebastian Success</h1>
+      <p class="sub">Your reply to Dylan, with the moving stars, ready to paste into Gmail.</p>
+    </div>
+    <button class="copy" id="copy" type="button">Copy email</button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <ol>
+      <li><span>Click <strong>Copy email</strong> above.</span></li>
+      <li><span>In Gmail, open your reply draft <em>“Re: Grand Rising, brother…”</em>. Click inside the message, press <kbd>⌘</kbd> <kbd>A</kbd>, then <kbd>⌘</kbd> <kbd>V</kbd>.</span></li>
+      <li><span>The banner, signature and sparkle lines appear in a second or two. Attach the WAV and the TXT with the paperclip.</span></li>
+      <li><span>Hit <strong>Send</strong>.</span></li>
+    </ol>
+    <p class="note">The stars move in Gmail, Apple Mail and on phones. Outlook for Windows shows a still frame of the banner.</p>
+  </section>
+
+  <section aria-label="Email preview">
+    <p class="preview-label">Live preview</p>
+    <div class="preview" id="preview"><!--PREVIEW--></div>
+  </section>
+</div>
+
+<script>
+const EMAIL_HTML = /*EMAIL_HTML*/null;
+const EMAIL_TEXT = /*EMAIL_TEXT*/null;
+const btn = document.getElementById("copy");
+const status = document.getElementById("status");
+
+function say(msg, warn) {
+  status.textContent = msg;
+  status.classList.toggle("warn", !!warn);
+}
+
+// Put rich HTML on the clipboard. First try a copy-event override (works in
+// locked-down frames), then the async Clipboard API.
+async function copyEmail() {
+  let done = false;
+  const onCopy = (e) => {
+    e.clipboardData.setData("text/html", EMAIL_HTML);
+    e.clipboardData.setData("text/plain", EMAIL_TEXT);
+    e.preventDefault();
+    done = true;
+  };
+  document.addEventListener("copy", onCopy);
+  try { document.execCommand("copy"); } catch (e) {}
+  document.removeEventListener("copy", onCopy);
+
+  if (!done && navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([EMAIL_HTML], { type: "text/html" }),
+        "text/plain": new Blob([EMAIL_TEXT], { type: "text/plain" })
+      })]);
+      done = true;
+    } catch (e) {}
+  }
+
+  if (done) {
+    btn.textContent = "Copied";
+    say("Copied. Now paste it into your Gmail reply.");
+    setTimeout(() => { btn.textContent = "Copy email"; }, 2500);
+  } else {
+    say("This browser blocked copying. Open this page in Chrome on your Mac and try again.", true);
+  }
+}
+btn.addEventListener("click", copyEmail);
+</script>
