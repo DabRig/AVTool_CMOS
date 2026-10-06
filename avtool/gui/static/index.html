@@ -20,7 +20,7 @@
       </div>
       <div class="brand-text">
         <h1 class="chrome-text">SEBASTIAN SUCCESS</h1>
-        <div class="sub hud">AV TRANSCRIBER <span class="sep">✦</span> V<span id="ver">1.1</span> <span class="sep">✦</span> OFFLINE SPEECH-TO-TEXT</div>
+        <div class="sub hud">AV TRANSCRIBER <span class="sep">✦</span> V<span id="ver">1.2</span> <span class="sep">✦</span> OFFLINE SPEECH-TO-TEXT</div>
       </div>
     </div>
     <div class="readouts">
@@ -33,6 +33,9 @@
       <div class="readout" title="Nothing is ever uploaded">
         <span class="hud lbl">NETWORK</span><span class="val"><i class="led on"></i>LOCAL ONLY</span>
       </div>
+      <button class="help-btn" id="btn-help" title="Help Center, tour and FAQ  (?)" aria-label="Help">
+        <span class="q">?</span><span class="hud">HELP</span>
+      </button>
     </div>
   </header>
 
@@ -220,8 +223,251 @@
     </div>
   </footer>
 </div>
+<!-- ============ GUIDED TOUR ============ -->
+<div class="tour" id="tour" hidden>
+  <div class="tour-spot" id="tour-spot"></div>
+  <div class="tour-card" id="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+    <div class="tour-step hud" id="tour-step">STEP 1 / 10</div>
+    <h3 id="tour-title"></h3>
+    <p id="tour-text"></p>
+    <div class="tour-dots" id="tour-dots"></div>
+    <div class="tour-actions">
+      <button class="btn ghost small" id="tour-skip">SKIP TOUR</button>
+      <span class="grow"></span>
+      <button class="btn small" id="tour-back">BACK</button>
+      <button class="btn primary small" id="tour-next">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HELP CENTER ============ -->
+<div class="help" id="help" hidden role="dialog" aria-modal="true" aria-label="Help Center">
+  <div class="help-panel">
+    <aside class="help-nav">
+      <div class="help-brand"><span class="mark"></span><div><b>HELP CENTER</b><small class="hud dim">AVTOOL MANUAL</small></div></div>
+      <input class="field" id="help-search" type="search" placeholder="Search help…" aria-label="Search help">
+      <nav id="help-links"></nav>
+      <button class="btn primary" id="btn-replay-tour">▶ TAKE THE TOUR</button>
+    </aside>
+    <div class="help-body" id="help-body">
+      <button class="icon-btn help-close" id="help-close" aria-label="Close help">✕</button>
+
+      <section data-title="Quick start">
+        <h2>Quick start</h2>
+        <p class="lead">Three moves, and your videos become transcripts and subtitles. Everything stays on this Mac.</p>
+        <ol class="steps">
+          <li><b>Add your videos.</b> Drag files or whole folders from Finder onto the window, or click <kbd>＋ FILES</kbd> / <kbd>＋ FOLDER</kbd>.</li>
+          <li><b>Press START.</b> Watch each file go EXTRACT › TRANSCRIBE › WRITE. You can keep using your Mac while it works.</li>
+          <li><b>Use the results.</b> Click <kbd>▤</kbd> on a finished row to read the transcript, or import the <code>.srt</code> into Premiere or CapCut.</li>
+        </ol>
+        <p class="note">Transcripts are saved <b>next to each video</b> unless you pick a custom folder in SETTINGS. A file that's already done is skipped next time, so finished work is never repeated.</p>
+      </section>
+
+      <section data-title="The screen at a glance">
+        <h2>The screen at a glance</h2>
+        <div class="map">
+          <div class="map-head">HEADER: your logo · ENGINE · MODEL · NETWORK · ? HELP</div>
+          <div class="map-rack">QUEUE RACK<br><small>your files and their progress</small></div>
+          <div class="map-side">SETTINGS · GLOSSARY<br>VIEWER · LOG</div>
+          <div class="map-foot">TRANSPORT: START · STOP · meter · progress · time left · counters</div>
+        </div>
+        <dl class="defs">
+          <dt>ENGINE light</dt><dd>Which transcriber runs your files. On your M2 Pro it says <b>MLX · APPLE GPU</b> (the fast one). Red means something isn't installed; see Troubleshooting.</dd>
+          <dt>MODEL light</dt><dd>The speech model in use. Blue = downloaded and works offline. Amber = it downloads once (internet needed) the first time you press START.</dd>
+          <dt>NETWORK · LOCAL ONLY</dt><dd>A reminder that nothing is ever uploaded.</dd>
+        </dl>
+      </section>
+
+      <section data-title="Queue rack">
+        <h2>Queue rack</h2>
+        <dl class="defs">
+          <dt><kbd>＋ FILES</kbd></dt><dd>Pick one or more video/audio files with the Finder picker.</dd>
+          <dt><kbd>＋ FOLDER</kbd></dt><dd>Add every video in a folder. Turn on <b>Include subfolders</b> in SETTINGS first to also add folders inside it.</dd>
+          <dt>Path box</dt><dd>Paste a file or folder location and press Enter (handy if you copied a path).</dd>
+          <dt><kbd>CLEAR DONE</kbd></dt><dd>Removes finished, skipped and failed rows from the list. It doesn't delete any files.</dd>
+          <dt>Drag &amp; drop</dt><dd>Drop files or folders anywhere on the window. The rack lights up with a holographic border.</dd>
+        </dl>
+        <h3>Row buttons</h3>
+        <dl class="defs">
+          <dt><kbd>▤</kbd> View</dt><dd>Opens the finished transcript in the VIEWER tab.</dd>
+          <dt><kbd>⌕</kbd> Show in Finder</dt><dd>Reveals the video in Finder (the transcripts sit right beside it).</dd>
+          <dt><kbd>✕</kbd> Remove</dt><dd>Takes the row off the list. Nothing is deleted from your drive.</dd>
+          <dt>Click a row</dt><dd>Selects it; if it's finished, the VIEWER loads it.</dd>
+        </dl>
+        <h3>Status lights</h3>
+        <table class="legend">
+          <tr><td><i class="led on"></i> READY / QUEUED</td><td>Waiting for START.</td></tr>
+          <tr><td><i class="led on pulse"></i> EXTRACT · TRANSCRIBE · WRITING</td><td>Working on it now, with its percentage.</td></tr>
+          <tr><td><i class="led ok"></i> DONE</td><td>All files written. <b>DONE · NO SPEECH</b> means the clip was silent.</td></tr>
+          <tr><td><i class="led warn"></i> NO AUDIO / STOPPED</td><td>No sound track in the file, or you pressed STOP before it finished.</td></tr>
+          <tr><td><i class="led bad"></i> FAILED</td><td>Couldn't be read or transcribed. Hover the word FAILED to see why; details are also in LOG.</td></tr>
+        </table>
+      </section>
+
+      <section data-title="Start, Stop & meters">
+        <h2>Start, Stop &amp; meters</h2>
+        <dl class="defs">
+          <dt><kbd>▶ START</kbd></dt><dd>Transcribes every READY, STOPPED and retry-able FAILED file, one at a time. Your Mac is kept awake (if that switch is on).</dd>
+          <dt><kbd>■ STOP</kbd></dt><dd>Stops cleanly within a second or two: the file in progress is set back to STOPPED, temporary audio is deleted, and no half-written transcript is left behind. Press START to continue where it left off.</dd>
+          <dt>NOW</dt><dd>The file being worked on and its position in the batch (e.g. FILE 2/5).</dd>
+          <dt>Meter</dt><dd>48 segments for the whole batch. The violet tip is the live edge.</dd>
+          <dt>EXTRACT › TRANSCRIBE › WRITE</dt><dd>The three stages of the current file. Extracting pulls the sound out of the video, transcribing turns speech into text (the long part), writing saves the files.</dd>
+          <dt>PROGRESS · TIME LEFT</dt><dd>Overall percentage and an estimate that appears after the first file finishes (it learns your Mac's real speed).</dd>
+          <dt>Counters</dt><dd><i class="led on"></i> done · <i class="led warn"></i> skipped · <i class="led bad"></i> failed.</dd>
+        </dl>
+      </section>
+
+      <section data-title="Settings">
+        <h2>Settings</h2>
+        <p>Settings are remembered between launches, and locked while a batch runs.</p>
+        <dl class="defs">
+          <dt>QUALITY knob</dt><dd><b>BEST</b> (large-v3-turbo): the most accurate; use it for final work. <b>BALANCED</b> (medium): a bit faster. <b>DRAFT</b> (small): fastest, rougher. Click the knob to step, drag it up/down, click a label, or use the arrow keys. A model you haven't used before downloads once.</dd>
+          <dt>LANGUAGE</dt><dd><b>EN</b> for English (recommended for your recordings). <b>AUTO</b> guesses from the first 30 seconds, which can be fooled by music or a non-English intro. <b>ES</b> for Spanish.</dd>
+          <dt>CAPTIONS</dt><dd><b>STANDARD</b>: up to 42 characters × 2 lines, max 7 seconds each, for Premiere, CapCut, DaVinci and YouTube. <b>REELS</b>: short one-line captions (≈18 characters) for vertical video.</dd>
+          <dt>Boost quiet voices</dt><dd>Evens out loud and quiet speakers. Turn it on if audience questions (far from the mic) come out missing, then redo those files.</dd>
+          <dt>Include subfolders</dt><dd>When adding a folder, also add the videos inside its subfolders.</dd>
+          <dt>Redo finished files</dt><dd>Normally finished files are skipped. Turn this on to transcribe them again (e.g. after editing the glossary or changing quality). Remember to turn it off afterwards.</dd>
+          <dt>Keep Mac awake</dt><dd>Stops the Mac sleeping during long batches. Keep the charger in; closing the lid on battery still sleeps.</dd>
+          <dt>SAVE TRANSCRIPTS</dt><dd><b>NEXT TO VIDEO</b> or a <b>CUSTOM FOLDER</b> (click CHOOSE…). Use a custom folder if your drive is read-only on the Mac.</dd>
+          <dt>OUTPUT FILES</dt><dd>Tap a chip to switch a format on or off. JSON is always made: it marks the file as finished.</dd>
+        </dl>
+      </section>
+
+      <section data-title="Glossary">
+        <h2>Glossary</h2>
+        <p>Names and terms Whisper should spell correctly: people (Evan, Dylan…), brands (Smooth Scaling, Lightning OS…). One per line, then <kbd>SAVE GLOSSARY</kbd>.</p>
+        <ul class="tips">
+          <li><b>Fix a repeat mistake:</b> write <code>wrong spelling -&gt; Right Spelling</code>, e.g. <code>Lightening OS -&gt; Lightning OS</code>. Fixes and capital letters are applied to every output file.</li>
+          <li><b>Keep it short</b> (a few dozen terms). A very long list can make Whisper invent or repeat lines; the counter turns amber past 40.</li>
+          <li>Lines starting with <code>#</code> are notes and are ignored.</li>
+          <li>To apply a new glossary to finished videos, turn on <b>Redo finished files</b> and press START.</li>
+        </ul>
+      </section>
+
+      <section data-title="Viewer">
+        <h2>Viewer</h2>
+        <dl class="defs">
+          <dt>File menu</dt><dd>Pick any finished transcript in the queue.</dd>
+          <dt>Search</dt><dd>Type a word to show only matching lines (highlighted).</dd>
+          <dt>Click a line</dt><dd>Copies it with its timestamp, e.g. <code>[3:42] …</code>, ready for notes or edit decisions.</dd>
+          <dt><kbd>OPEN TXT / SRT / DOCX</kbd></dt><dd>Opens that file in its usual app.</dd>
+          <dt><kbd>COPY ALL</kbd></dt><dd>Copies the whole transcript text.</dd>
+          <dt><kbd>SHOW IN FINDER</kbd></dt><dd>Reveals the transcript files in Finder.</dd>
+        </dl>
+      </section>
+
+      <section data-title="Log">
+        <h2>Log</h2>
+        <p>A running commentary: what was found, each file's result and speed, and the summary. Green = done, amber = skipped/stopped, red = failed. The same information is saved as <code>log.txt</code> next to your transcripts, and the app's own diagnostics go to <code>~/Library/Logs/AVTool.log</code>.</p>
+      </section>
+
+      <section data-title="Your files">
+        <h2>Your files</h2>
+        <p>Each output keeps the full video name, so <code>talk.mov</code> and <code>talk.mp4</code> never overwrite each other.</p>
+        <table class="legend files">
+          <tr><td><code>IMG_0042.MOV.txt</code></td><td>Clean paragraphs to read, quote or paste into Claude for a summary.</td></tr>
+          <tr><td><code>….timestamped.txt</code></td><td>Every line starts with <code>[HH:MM:SS]</code>, for finding moments in the edit.</td></tr>
+          <tr><td><code>….srt</code></td><td>Subtitles for Premiere, CapCut, DaVinci, Final Cut, YouTube.</td></tr>
+          <tr><td><code>….vtt</code></td><td>Subtitles for web players.</td></tr>
+          <tr><td><code>….docx</code></td><td>Word document with a timestamp per paragraph (open in Word, Pages or Google Docs; File › Export to PDF for a PDF).</td></tr>
+          <tr><td><code>….json</code></td><td>Full data with word timings. Its presence means "finished".</td></tr>
+          <tr><td><code>log.txt</code></td><td>The run record for that folder.</td></tr>
+        </table>
+      </section>
+
+      <section data-title="Premiere, CapCut & more">
+        <h2>Premiere, CapCut &amp; more</h2>
+        <h3>Adobe Premiere Pro</h3>
+        <ol class="steps small">
+          <li><b>File › Import</b> the <code>.srt</code>.</li>
+          <li>Drag it onto the timeline <b>above the video</b>, starting at the exact point where the clip starts. It becomes a captions track.</li>
+          <li>Restyle in <b>Window › Text › Captions</b> (and the Essential Graphics panel).</li>
+        </ol>
+        <h3>CapCut (desktop)</h3>
+        <ol class="steps small">
+          <li>Drag the <code>.srt</code> onto the timeline, or use <b>Captions › Import captions</b> (the menu name varies by version).</li>
+          <li>For vertical reels, set CAPTIONS to <b>REELS</b> first, and pick a <b>custom folder</b> so reels captions don't replace the standard ones.</li>
+        </ol>
+        <h3>DaVinci Resolve</h3>
+        <p><b>File › Import › Subtitle…</b>, then drag the subtitle from the Media Pool onto the timeline.</p>
+        <h3>Final Cut Pro</h3>
+        <p><b>File › Import › Captions…</b> and choose the <code>.srt</code>.</p>
+        <h3>Word, Pages, Google Docs</h3>
+        <p>Open the <code>.docx</code>. For Google Docs, upload it to Drive and open with Google Docs.</p>
+        <p class="note"><b>Clip starts later in your timeline?</b> Captions are timed from the start of the video file. Slide the caption track so its start lines up with the start of the clip.</p>
+      </section>
+
+      <section data-title="Tips for best results">
+        <h2>Tips for best results</h2>
+        <ul class="tips">
+          <li><b>Use BEST quality for anything you'll publish</b>; DRAFT is for quick checks.</li>
+          <li><b>Set the language</b> to EN rather than AUTO for English talks.</li>
+          <li><b>Add names to the glossary before</b> a big batch: Evan, guests, brands.</li>
+          <li><b>Charger in, lid open</b> for long batches.</li>
+          <li><b>Test one short clip first</b> when trying a new camera or mic setup.</li>
+          <li><b>Audience questions missing?</b> Turn on Boost quiet voices and redo that file.</li>
+          <li><b>Big files on a spinning external drive</b> take a few extra seconds each to read during EXTRACT. That's normal.</li>
+        </ul>
+      </section>
+
+      <section data-title="FAQ">
+        <h2>FAQ</h2>
+        <details><summary>Does anything get uploaded?</summary><p>No. The app only talks to a tiny engine running on this Mac (127.0.0.1). The internet is used only to download a speech model the first time you use it.</p></details>
+        <details><summary>How long does it take?</summary><p>It depends on the Mac and the quality setting. The first file shows the real speed in the LOG (e.g. "12× real time" means a 48-minute video takes about 4 minutes). Apple-silicon Macs are typically several times faster than real time on BEST.</p></details>
+        <details><summary>Why does a file say "already done"?</summary><p>It has a finished <code>.json</code> next to it from an earlier run, so it's skipped. To transcribe it again, turn on <b>Redo finished files</b>.</p></details>
+        <details><summary>Can I use my Mac while it works?</summary><p>Yes. It may feel a little busier during TRANSCRIBE; everything else is fine.</p></details>
+        <details><summary>What if I close the window in the middle?</summary><p>It stops cleanly, like pressing STOP. Open the app, add the same files, press START, and finished ones are skipped.</p></details>
+        <details><summary>Where do the transcripts go?</summary><p>Next to each video, unless SAVE TRANSCRIPTS is set to a custom folder. Click <kbd>⌕</kbd> on a row to jump there.</p></details>
+        <details><summary>Names are spelled wrong. What can I do?</summary><p>Add them to the GLOSSARY (or a <code>wrong -&gt; Right</code> fix), save, turn on Redo finished files, and run again.</p></details>
+        <details><summary>Can it label who's speaking?</summary><p>Not yet. New paragraphs start after pauses of 2+ seconds, which usually marks a question or answer. Speaker labels are on the roadmap.</p></details>
+        <details><summary>My camera recorded two audio tracks. Which is used?</summary><p>The first one that can be decoded. To choose another, use the Terminal version with <code>--audio-track 2</code>, or set it per file in <code>config.toml</code>.</p></details>
+        <details><summary>What do DRAFT / BALANCED / BEST download?</summary><p>Each quality level uses its own model (about 0.5–1.6 GB), downloaded once the first time you press START with it.</p></details>
+        <details><summary>Which file types work?</summary><p>Video: .mov .mp4 .mkv .webm .wmv. Audio: .mp3 .wav .flac .aac .m4a. Upper-case names like .MOV are fine. Hidden files and macOS "._" files are ignored.</p></details>
+        <details><summary>How do I update AVTool?</summary><p>In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash update.command</code>. Your glossary, settings and transcripts are kept.</p></details>
+      </section>
+
+      <section data-title="Troubleshooting">
+        <h2>Troubleshooting</h2>
+        <dl class="defs">
+          <dt>Every file FAILED with "No such file or directory: 'ffmpeg'"</dt><dd>Fixed in V1.2. Run the update (see FAQ), then press START again.</dd>
+          <dt>ENGINE light is red</dt><dd>Something isn't installed. In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash setup_mac.command</code>.</dd>
+          <dt>"Can't write to …"</dt><dd>The drive is read-only on this Mac (often NTFS-formatted). Choose SAVE TRANSCRIPTS › CUSTOM FOLDER.</dd>
+          <dt>macOS asks about "files on a removable volume"</dt><dd>Click <b>Allow</b> so AVTool can read your external drive. To change it later: System Settings › Privacy &amp; Security › Files and Folders.</dd>
+          <dt>A file shows NO AUDIO</dt><dd>That video has no sound track (screen recordings sometimes don't). Nothing to transcribe.</dd>
+          <dt>Model download is stuck</dt><dd>Check the internet connection, then press START again; it continues the download.</dd>
+          <dt>Text repeats, or lines appear over silence</dt><dd>The app filters most of these automatically. Note the file and time and let your developer know.</dd>
+          <dt>Still stuck?</dt><dd>Open the LOG tab, copy the red lines, and send them along with a screenshot.</dd>
+        </dl>
+      </section>
+
+      <section data-title="Keyboard shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <table class="legend keys">
+          <tr><td><kbd>⌘</kbd> <kbd>O</kbd></td><td>Add files</td></tr>
+          <tr><td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>O</kbd></td><td>Add a folder</td></tr>
+          <tr><td><kbd>⌘</kbd> <kbd>↩</kbd></td><td>START</td></tr>
+          <tr><td><kbd>⌘</kbd> <kbd>.</kbd></td><td>STOP</td></tr>
+          <tr><td><kbd>?</kbd></td><td>Open this Help Center</td></tr>
+          <tr><td><kbd>esc</kbd></td><td>Close Help or the tour</td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Back / next in the tour; turn the QUALITY knob when it's selected</td></tr>
+        </table>
+      </section>
+
+      <section data-title="Privacy & updates">
+        <h2>Privacy &amp; updates</h2>
+        <ul class="tips">
+          <li>All transcription happens on this Mac. No account, no upload, no usage tracking.</li>
+          <li>The engine only listens to this Mac (127.0.0.1) and requires a secret key that changes every launch.</li>
+          <li>Update any time with <code>bash update.command</code>; it keeps your glossary, settings and transcripts.</li>
+          <li>AVTool is built on free, open-source parts: OpenAI Whisper, mlx-whisper, faster-whisper, FFmpeg, pywebview and the Inter typeface.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script src="stars.js"></script>
 <script src="app.js"></script>
+<script src="help.js"></script>
 </body>
 </html>

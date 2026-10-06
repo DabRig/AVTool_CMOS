@@ -159,3 +159,15 @@ def test_custom_output_folder(app, tmp_path):
     call(app, "/api/start", {})
     wait_until(app, lambda s: not s["running"])
     assert (out / "sample.flac.srt").exists() and not (app["clips"] / "sample.flac.srt").exists()
+
+
+def test_tour_flag_allowed_while_running(app, monkeypatch):
+    monkeypatch.setenv("AVTOOL_TEST_DELAY", "0.02")
+    call(app, "/api/add", {"paths": [str(app["clips"] / "sample.wav")]})
+    wait_until(app, lambda s: s["items"] and s["items"][0]["status"] == "ready")
+    assert call(app, "/api/state")["settings"]["tour_done"] is False
+    call(app, "/api/start", {})
+    wait_until(app, lambda s: s["running"])
+    assert call(app, "/api/settings", {"tour_done": True})["tour_done"] is True  # not locked
+    call(app, "/api/stop", {})
+    wait_until(app, lambda s: not s["running"])

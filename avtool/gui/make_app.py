@@ -35,6 +35,8 @@ if [[ ! -x "$PROJECT/.venv/bin/python" ]]; then
   exit 1
 fi
 cd "$PROJECT" || exit 1
+# Apps opened from Finder don't see Homebrew's folder; add it so ffmpeg is found.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 echo "--- $(date) ---" >> "$LOG"
 exec "$PROJECT/.venv/bin/python" -m avtool.gui "$@" >> "$LOG" 2>&1
 """

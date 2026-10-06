@@ -94,6 +94,7 @@
     renderLog(s);
     renderViewerOptions(s);
     if (prev && prev.running && !s.running) onBatchEnd(s);
+    if (!prev) document.dispatchEvent(new CustomEvent("avtool:first-state", { detail: s }));
   }
 
   function renderHeader(s) {
@@ -565,6 +566,9 @@
   }
 
   // ------------------------------------------------------------- boot
+  // Shared with help.js (tour, Help Center, shortcuts).
+  window.AVTool = { api, toast, getState: () => state, showTab };
+
   function boot() {
     $$(".tab").forEach((t) => t.addEventListener("click", () => {
       showTab(t.dataset.tab);

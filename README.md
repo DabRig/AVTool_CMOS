@@ -13,7 +13,7 @@ Turn video and audio files into accurate, timestamped transcripts and subtitles,
 
 ---
 
-## The AVTool app (V1.1)
+## The AVTool app (V1.2)
 
 **AVTool.app** is a window you double-click, styled like an audio plugin floating in
 space: your logo, a slowly drifting starfield, and glass panels. It does everything
@@ -45,6 +45,11 @@ switched on in Accessibility settings, the stars hold still.)
 - **VIEWER tab:** read any finished transcript with timestamps. You can search
   it, click a line to copy it, or open the TXT / SRT / DOCX.
 - **LOG tab:** the same running commentary the Terminal version prints.
+- **? HELP (top right):** the built-in manual: every control explained, guides
+  for Premiere, CapCut, DaVinci, Final Cut and Word, tips, an FAQ, troubleshooting
+  and keyboard shortcuts, all searchable. A one-minute **guided tour** runs the first
+  time you open the app, and you can replay it from the Help Center.
+- **Shortcuts:** ⌘O add files · ⌘⇧O add a folder · ⌘↩ START · ⌘. STOP · ? help.
 
 **Updating later:** open Terminal and run
 `cd ~/Documents/AVTool && bash update.command`. It downloads the newest version

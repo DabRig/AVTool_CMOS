@@ -246,3 +246,32 @@ def test_dragged_paths():
     if os.name != "nt":
         assert clean_dragged_path("/Volumes/LaCie/My\\ Shoot/IMG\\ 1.MOV ") == "/Volumes/LaCie/My Shoot/IMG 1.MOV"
         assert clean_dragged_path("'/Volumes/LaCie/My Shoot'") == "/Volumes/LaCie/My Shoot"
+
+
+def test_homebrew_folder_added_to_path(monkeypatch, tmp_path):
+    """Apps opened from Finder get a short PATH; Homebrew's folder must be added."""
+    from avtool import media
+    brew = tmp_path / "brew-bin"
+    brew.mkdir()
+    monkeypatch.setattr(media, "HOMEBREW_DIRS", (str(brew), str(tmp_path / "missing")))
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
+    media.ensure_tool_path()
+    parts = os.environ["PATH"].split(os.pathsep)
+    assert parts[0] == str(brew) and str(tmp_path / "missing") not in parts
+    media.ensure_tool_path()  # running it twice doesn't duplicate
+    assert os.environ["PATH"].split(os.pathsep).count(str(brew)) == 1
+
+
+def test_wav_loaded_without_ffmpeg(tmp_path):
+    """The Mac engine gets the sound as numbers, so it never has to run ffmpeg."""
+    import wave
+    import numpy as np
+    from avtool.backends import load_wav_array
+    wav = tmp_path / "a.wav"
+    samples = (np.sin(np.arange(16000) / 10) * 16000).astype(np.int16)
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+        w.writeframes(samples.tobytes())
+    audio = load_wav_array(wav)
+    assert audio.dtype == np.float32 and audio.shape == (16000,)
+    assert abs(float(audio.max()) - 16000 / 32768) < 1e-3

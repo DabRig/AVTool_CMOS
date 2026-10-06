@@ -1,3 +1,4 @@
 # For running the automated tests (python -m pytest -q).
 -r requirements.txt
 pytest>=8
+numpy                # used by a test (the engines install it anyway)

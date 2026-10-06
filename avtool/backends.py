@@ -223,7 +223,7 @@ class MLXBackend(Backend):
         with _glossary_on_every_window(transcribe_module, prompt), \
                 _report_progress(transcribe_module, progress):
             result = mlx_whisper.transcribe(
-                str(wav),
+                load_wav_array(wav),  # hand over the sound itself: mlx never needs ffmpeg
                 path_or_hf_repo=self.local_path or self.repo,
                 verbose=False,  # progress bar on; _report_progress reroutes it to ours
                 language=language,
@@ -246,6 +246,21 @@ class MLXBackend(Backend):
                 float(seg.get("compression_ratio", 1.0)),
             ))
         return Transcript(segments, result.get("language"))
+
+
+def load_wav_array(wav: Path):
+    """Read our own 16 kHz mono 16-bit temp WAV into the float array Whisper uses.
+
+    Exactly what mlx-whisper would do itself, minus running the `ffmpeg`
+    program (which can't always be found when the app is opened from Finder).
+    The WAV is small: ~115 MB per hour, ~230 MB per hour as floats.
+    """
+    import numpy as np
+    with wave.open(str(wav), "rb") as w:
+        if (w.getframerate(), w.getnchannels(), w.getsampwidth()) != (16000, 1, 2):
+            raise ValueError("unexpected temp audio format")
+        frames = w.readframes(w.getnframes())
+    return np.frombuffer(frames, np.int16).astype(np.float32) / 32768.0
 
 
 @contextlib.contextmanager

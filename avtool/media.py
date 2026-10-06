@@ -80,12 +80,29 @@ def scan(path: Path, recursive: bool = False) -> list[Path]:
 
 # ---------------------------------------------------------------- tools
 
+HOMEBREW_DIRS = ("/opt/homebrew/bin", "/usr/local/bin")
+
+
+def ensure_tool_path() -> None:
+    """Apps opened from Finder get a short PATH without Homebrew's folder, so a
+    library that runs `ffmpeg` by name can't find it. Add Homebrew's folders
+    (only those that exist) to the front of PATH for this process."""
+    parts = [p for p in os.environ.get("PATH", "").split(os.pathsep) if p]
+    for folder in reversed(HOMEBREW_DIRS):
+        if os.path.isdir(folder) and folder not in parts:
+            parts.insert(0, folder)
+    os.environ["PATH"] = os.pathsep.join(parts)
+
+
+ensure_tool_path()
+
+
 def find_tool(name: str) -> Optional[str]:
     found = shutil.which(name)
     if found:
         return found
     # Homebrew locations, in case the PATH wasn't updated in this Terminal yet.
-    for prefix in ("/opt/homebrew/bin", "/usr/local/bin"):
+    for prefix in HOMEBREW_DIRS:
         candidate = Path(prefix) / name
         if candidate.exists():
             return str(candidate)

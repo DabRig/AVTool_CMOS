@@ -108,3 +108,16 @@ parsing. Real transcription quality and speed can only be judged on the Mac.
   and a rare shooting star. It runs at about 30 fps, pauses when the window is
   hidden, and holds still when Reduce motion is on.
 - Glass panels let the stars show through.
+
+## 8. V1.2: first real run on the Mac
+
+- **Bug found on the Mac:** all 5 files failed with `No such file or directory: 'ffmpeg'`
+  when the app was opened from Finder. Apps started from Finder get a short PATH
+  without Homebrew's folder, and mlx-whisper runs `ffmpeg` by name to read the temp
+  WAV. **Fixed twice over:** the tool now reads the temp WAV itself and passes the
+  audio to mlx-whisper as numbers (no ffmpeg needed), and both the launcher and the
+  app add Homebrew's folders to PATH. The failure was reproduced here with the old
+  code, then shown passing with the fix. Tests cover both parts.
+- **Guided tour** (10 steps, spotlight, remembered once seen) and a searchable
+  **Help Center** (15 sections, including editor guides, FAQ, troubleshooting and
+  shortcuts), plus keyboard shortcuts.

@@ -37,7 +37,8 @@ STATIC = Path(__file__).resolve().parent / "static"
 GUI_SETTINGS = PROJECT_DIR / "gui_settings.json"
 MODELS = ["small", "medium", "large-v3-turbo"]
 EDITABLE = ("model", "lang", "captions", "boost_quiet", "recursive", "force",
-            "keep_awake", "out", "formats")
+            "keep_awake", "out", "formats", "tour_done")
+ALWAYS_EDITABLE = {"tour_done"}  # not a transcription setting: fine to change mid-batch
 
 
 # ---------------------------------------------------------------- state
@@ -88,6 +89,7 @@ class AppState:
             "recursive": bool(self.config["recursive"]), "force": False,
             "keep_awake": bool(self.config["keep_awake"]), "out": self.config["out"] or "",
             "formats": [f for f in self.config["formats"] if f in FORMATS],
+            "tour_done": False,
         }
         try:
             saved = json.loads(GUI_SETTINGS.read_text())
@@ -98,7 +100,7 @@ class AppState:
 
     def update_settings(self, changes: dict) -> dict:
         with self.lock:
-            if self.running:
+            if self.running and not set(changes) <= ALWAYS_EDITABLE:
                 raise ValueError("Settings are locked while a batch is running.")
             old_model = self.settings.get("model")
             for key, value in changes.items():
@@ -110,6 +112,8 @@ class AppState:
                     continue
                 if key == "formats":
                     value = [f for f in value if f in FORMATS]
+                if key == "tour_done":
+                    value = bool(value)
                 self.settings[key] = value
             if "json" not in self.settings["formats"]:
                 self.settings["formats"].append("json")  # resume marker, always written
