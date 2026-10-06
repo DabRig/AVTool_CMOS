@@ -62,18 +62,17 @@ You should see **done 14 · skipped 1 · failed 1**:
 
 Open `samples/clips/sample.mov.txt` to see the transcript.
 
-## Step 3 — Test one real clip before the big job
+## Step 3 — Test one real video before the big job
 
-This times your Mac on real footage and checks the subtitles in your editor.
-Cut 90 seconds out of one of your videos (the original isn't changed):
+> **Golden rule:** never drag a file at Terminal's normal `%` prompt. That tries to
+> *run* the video and gives `exec format error`. Type the command first, press
+> Enter, and drag only when the tool shows its own `>` prompt.
 
-```
-.venv/bin/python samples/make_samples.py --from "DRAG-A-VIDEO-HERE" --start 60 --seconds 90
-./Transcribe.command samples/clips/sample.mov --force
-```
-
-Then import `samples/clips/sample.mov.srt` into Premiere or CapCut (see below)
-and check that the captions line up with the speech.
+1. Type `bash Transcribe.command` and press Enter.
+2. At the `>` prompt, drag **one** video from Finder into the window and press Enter.
+3. When it finishes, open the `.txt` next to the video, and import the `.srt` into
+   Premiere to check the captions line up. This video won't be redone in the big
+   run, because finished files are skipped.
 
 ## Step 4 — The real job
 
