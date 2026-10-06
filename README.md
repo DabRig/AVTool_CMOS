@@ -13,10 +13,12 @@ Turn video and audio files into accurate, timestamped transcripts and subtitles,
 
 ---
 
-## The AVTool app (V1.0)
+## The AVTool app (V1.1)
 
-**AVTool.app** is a window you double-click, styled like an audio plugin. It does
-everything the Terminal commands below do, without typing.
+**AVTool.app** is a window you double-click, styled like an audio plugin floating in
+space: your logo, a slowly drifting starfield, and glass panels. It does everything
+the Terminal commands below do, without typing. (If your Mac has *Reduce motion*
+switched on in Accessibility settings, the stars hold still.)
 
 - **Open it:** double-click **AVTool.app** in the AVTool folder. Drag it to your
   Dock to keep it handy. The first time, macOS may ask to let AVTool use files on
@@ -266,7 +268,9 @@ automatically), or by hand: `pip install -r requirements-cpu.txt`
   engine, allow an override) and the CLI design. No Buzz code was copied.
 - [pywebview](https://github.com/r0x0r/pywebview) (BSD): the app's native window.
 - [Inter](https://github.com/rsms/inter) typeface (SIL OFL 1.1), bundled for the
-  app's lettering. The SS monogram is traced from Inter Display Black Italic.
+  app's lettering.
+- The Sebastian Success logo (`avtool/gui/static/img/ss-logo.png`) is Sebastian's own
+  mark, used for the app and its icon.
 - [Vibe](https://github.com/thewh1teagle/vibe) by thewh1teagle (MIT): inspired
   the reels caption preset and building captions from word timings for steady
   timestamps. Ideas only; no code was copied.

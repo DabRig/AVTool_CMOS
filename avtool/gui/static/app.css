@@ -70,12 +70,13 @@ button { cursor: pointer; }
   grid-template-rows: auto 1fr auto;
   gap: 10px;
   padding: 14px 18px 16px;
+  /* Deep space: a few soft nebula clouds over near-black navy. Stars are drawn on #stars. */
   background:
-    radial-gradient(1200px 600px at 18% -10%, rgba(47, 107, 255, .20), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgba(79, 216, 255, .10), transparent 60%),
-    linear-gradient(rgba(120, 175, 255, .035) 1px, transparent 1px) 0 0 / 28px 28px,
-    linear-gradient(90deg, rgba(120, 175, 255, .035) 1px, transparent 1px) 0 0 / 28px 28px,
-    var(--frame);
+    radial-gradient(900px 520px at 12% -12%, rgba(0, 102, 255, .26), transparent 62%),
+    radial-gradient(700px 420px at 92% 18%, rgba(140, 100, 255, .13), transparent 65%),
+    radial-gradient(800px 480px at 70% 115%, rgba(79, 216, 255, .12), transparent 62%),
+    radial-gradient(520px 320px at 30% 80%, rgba(60, 90, 255, .08), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, #061232 0%, #030919 55%, #01040d 100%);
   border: 1px solid transparent;
   border-radius: 14px;
   box-shadow:
@@ -92,6 +93,12 @@ button { cursor: pointer; }
   border-radius: 14px;
   background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px);
 }
+#stars {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border-radius: 14px; pointer-events: none; z-index: 0;
+}
+.head, .body, .transport { position: relative; z-index: 1; }
+
 .screw {
   position: absolute; width: 11px; height: 11px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff, #9aaac0 45%, #46556e 100%);
@@ -116,8 +123,33 @@ button { cursor: pointer; }
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
   background: var(--holo); opacity: .55;
 }
-.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
-.logo { width: 58px; height: 58px; filter: drop-shadow(0 0 14px rgba(79, 216, 255, .35)); }
+.brand { display: flex; align-items: center; gap: 24px; min-width: 0; padding-left: 6px; }
+/* The Sebastian Success mark, filled with the brand blue (#0066FF) rising to an
+   icy highlight, so it reads on dark space. The PNG is used as a stencil. */
+.mark {
+  display: block; width: 100%; height: 100%;
+  background: linear-gradient(160deg, #c9f3ff 0%, #4fb2ff 30%, #0066ff 62%, #0a4fe0 100%);
+  -webkit-mask: url(img/ss-mark-512.png) center / contain no-repeat;
+  mask: url(img/ss-mark-512.png) center / contain no-repeat;
+}
+.logo { position: relative; width: 60px; height: 60px; flex: none; }
+.logo .mark { position: absolute; inset: 4px; width: auto; height: auto; filter: drop-shadow(0 0 10px rgba(0, 102, 255, .75)) drop-shadow(0 0 22px rgba(79, 216, 255, .3)); }
+.orbit { /* thin orbit ring with a tiny moon */
+  position: absolute; inset: 6px -9px; border-radius: 50%;
+  border: 1px solid rgba(160, 210, 255, .28);
+  transform: rotate(-24deg);
+}
+/* Moons travel their elliptical orbits by combining a left-right sway with an
+   up-down sway a quarter-turn behind it (works in every browser engine). */
+.ox, .oy { position: absolute; inset: 0; }
+.ox { animation: ox var(--t, 4.5s) ease-in-out infinite alternate; }
+.oy { animation: oy var(--t, 4.5s) ease-in-out calc(var(--t, 4.5s) / -2) infinite alternate; }
+@keyframes ox { from { transform: translateX(-50%); } to { transform: translateX(50%); } }
+@keyframes oy { from { transform: translateY(-50%); } to { transform: translateY(50%); } }
+.orbit i, .planet .ring i {
+  position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px;
+  border-radius: 50%; background: #e8f6ff; box-shadow: 0 0 8px #9fdcff, 0 0 2px #fff;
+}
 .chrome-text {
   margin: 0;
   font: 900 28px/1 var(--display);
@@ -158,7 +190,9 @@ button { cursor: pointer; }
 .panel {
   position: relative;
   min-height: 0;
-  background: linear-gradient(180deg, rgba(10, 26, 63, .82), rgba(5, 14, 36, .9));
+  background: linear-gradient(180deg, rgba(10, 26, 63, .5), rgba(4, 12, 32, .62));
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.25);
+  backdrop-filter: blur(1.5px) saturate(1.25);
   border: 1px solid var(--line);
   border-radius: var(--r);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 10px 30px rgba(0, 0, 0, .35);
@@ -226,7 +260,7 @@ button { cursor: pointer; }
   padding: 0 10px;
   margin-bottom: 6px;
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(14, 33, 76, .75), rgba(7, 19, 48, .8));
+  background: linear-gradient(180deg, rgba(14, 33, 76, .82), rgba(7, 19, 48, .86));
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
   position: relative;
@@ -269,14 +303,22 @@ button { cursor: pointer; }
 .drop { display: grid; place-items: center; padding: 0 18px 18px; min-height: 0; }
 .rows:not(:empty) + .drop { display: none; }
 .drop-inner {
-  width: 100%; height: 100%; min-height: 260px;
+  width: 100%; height: 100%; min-height: 300px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   border-radius: 12px;
   border: 1.5px dashed rgba(120, 190, 255, .35);
-  background: radial-gradient(400px 220px at 50% 40%, rgba(47, 107, 255, .12), transparent 70%);
+  background: radial-gradient(420px 240px at 50% 42%, rgba(0, 102, 255, .16), transparent 70%);
+  border-color: rgba(120, 190, 255, .28);
 }
-.drop-ring { width: 104px; height: 104px; margin-bottom: 8px; filter: drop-shadow(0 0 22px rgba(79, 216, 255, .35)); animation: float 5s ease-in-out infinite; }
-.drop-ring img { width: 100%; height: 100%; }
+.planet { position: relative; width: 150px; height: 150px; margin-bottom: 10px; animation: float 6s ease-in-out infinite; }
+.planet .halo { position: absolute; inset: 8px; border-radius: 50%; background: radial-gradient(circle, rgba(0, 102, 255, .35), transparent 68%); filter: blur(6px); }
+.planet .mark { position: absolute; inset: 22px; width: auto; height: auto; filter: drop-shadow(0 0 16px rgba(0, 102, 255, .8)); }
+.planet .ring { position: absolute; border-radius: 50%; border: 1px solid rgba(160, 210, 255, .3); }
+.planet .r1 { inset: 30px -34px; transform: rotate(-18deg); }
+.planet .r2 { inset: 4px -8px; transform: rotate(32deg); border-color: rgba(180, 140, 255, .22); border-style: dashed; }
+.planet .r1 { --t: 6s; }
+.planet .r2 { --t: 9.5s; }
+.planet .r2 i { width: 4px; height: 4px; margin: -2px; background: #e4d8ff; box-shadow: 0 0 8px #b48cff; }
 @keyframes float { 50% { transform: translateY(-5px); } }
 .drop-title { font: 900 18px var(--display); letter-spacing: .14em; color: var(--ice); }
 .drop-sub { font: 11px var(--mono); letter-spacing: .08em; color: var(--cyan); }
@@ -398,10 +440,11 @@ select.field { appearance: none; padding-right: 26px; background-image: linear-g
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center;
   padding: 12px 16px;
   border-radius: var(--r);
-  background: linear-gradient(180deg, #0c1c44, #050f28);
+  background: linear-gradient(180deg, rgba(12, 28, 68, .82), rgba(5, 15, 40, .9));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border: 1px solid var(--line-strong);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -6px 30px rgba(47, 107, 255, .08);
-  position: relative;
 }
 .transport::before {
   content: ""; position: absolute; left: 14px; right: 14px; top: -1px; height: 1px; background: var(--holo); opacity: .6;

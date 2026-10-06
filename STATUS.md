@@ -97,3 +97,14 @@ parsing. Real transcription quality and speed can only be judged on the Mac.
 | Security: listens on 127.0.0.1 only, random per-launch key, Host check, page allowed to load only its own files, only the app's own media and outputs can be opened | ✅ automated tests |
 | Live progress from the Mac engine (mlx-whisper) | ✅ its internal progress bar is rerouted to the app (checked with a tiny test model) |
 | `update.command`: one-command updates that keep glossary, settings and transcripts | ✅ written. ⏳ first real use on your Mac |
+
+## 7. V1.1: brand and space theme
+
+- Sebastian's own logo (`ss-logo.png`) replaces the placeholder monogram. It's used
+  in the header (brand blue #0066FF with an icy highlight and an orbit ring), in the
+  drop zone (as a planet with two orbiting moons), and in the app icon (a deep-space
+  rounded square with stars, nebula and a ring).
+- Animated starfield (`static/stars.js`): three depths of stars, twinkle, slow drift,
+  and a rare shooting star. It runs at about 30 fps, pauses when the window is
+  hidden, and holds still when Reduce motion is on.
+- Glass panels let the stars show through.

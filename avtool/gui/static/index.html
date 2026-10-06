@@ -4,20 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AVTool — Sebastian Success</title>
-<link rel="icon" href="img/logo.svg">
+<link rel="icon" href="img/ss-mark-512.png">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <div class="plugin" id="plugin">
+  <canvas id="stars" aria-hidden="true"></canvas>
   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
 
   <!-- ============ HEADER ============ -->
   <header class="head">
     <div class="brand">
-      <img class="logo" src="img/logo.svg" alt="">
+      <div class="logo" role="img" aria-label="Sebastian Success logo">
+        <span class="orbit"><b class="ox"><b class="oy"><i></i></b></b></span><span class="mark"></span>
+      </div>
       <div class="brand-text">
         <h1 class="chrome-text">SEBASTIAN SUCCESS</h1>
-        <div class="sub hud">AV TRANSCRIBER <span class="sep">//</span> V<span id="ver">1.0</span> <span class="sep">//</span> OFFLINE SPEECH-TO-TEXT</div>
+        <div class="sub hud">AV TRANSCRIBER <span class="sep">✦</span> V<span id="ver">1.1</span> <span class="sep">✦</span> OFFLINE SPEECH-TO-TEXT</div>
       </div>
     </div>
     <div class="readouts">
@@ -55,7 +58,10 @@
 
       <div class="drop" id="drop">
         <div class="drop-inner">
-          <div class="drop-ring"><img src="img/logo.svg" alt=""></div>
+          <div class="planet" aria-hidden="true">
+            <span class="ring r1"><b class="ox"><b class="oy"><i></i></b></b></span><span class="ring r2"><b class="ox"><b class="oy"><i></i></b></b></span>
+            <span class="halo"></span><span class="mark"></span>
+          </div>
           <div class="drop-title">DROP VIDEOS OR FOLDERS HERE</div>
           <div class="drop-sub">.mov · .mp4 · .mkv · .webm · .wmv · .mp3 · .wav · .flac · .aac · .m4a</div>
           <div class="drop-sub dim">or use ＋ FILES / ＋ FOLDER above</div>
@@ -215,6 +221,7 @@
   </footer>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="stars.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
