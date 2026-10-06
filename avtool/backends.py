@@ -165,12 +165,13 @@ class Backend:
         raise NotImplementedError
 
 
-def _offline_mode() -> None:
-    """Once the model is cached, forbid the Hugging Face library from going online."""
-    os.environ["HF_HUB_OFFLINE"] = "1"
+def _offline_mode(offline: bool = True) -> None:
+    """Once the model is cached, forbid the Hugging Face library from going online.
+    Lifted (offline=False) only for an intended one-time model download."""
+    os.environ["HF_HUB_OFFLINE"] = "1" if offline else "0"
     with contextlib.suppress(Exception):
         import huggingface_hub.constants as hf_constants
-        hf_constants.HF_HUB_OFFLINE = True
+        hf_constants.HF_HUB_OFFLINE = offline
 
 
 # ---------------------------------------------------------------- MLX (Mac)
@@ -205,7 +206,8 @@ class MLXBackend(Backend):
                     f"Model {self.repo} isn't downloaded yet. Connect to the internet "
                     f"once and run: python transcribe.py --download-model"
                 )
-            print(f"Downloading the model {self.repo} (one time only, about 1.6 GB)...")
+            print(f"Downloading the model {self.repo} (one time only, up to 1.6 GB)...")
+            _offline_mode(False)
             self.local_path = snapshot_download(self.repo)
         _offline_mode()
 
@@ -218,11 +220,12 @@ class MLXBackend(Backend):
     def transcribe(self, wav, duration, language, prompt, progress) -> Transcript:
         import mlx_whisper
         transcribe_module = importlib.import_module("mlx_whisper.transcribe")
-        with _glossary_on_every_window(transcribe_module, prompt):
+        with _glossary_on_every_window(transcribe_module, prompt), \
+                _report_progress(transcribe_module, progress):
             result = mlx_whisper.transcribe(
                 str(wav),
                 path_or_hf_repo=self.local_path or self.repo,
-                verbose=False,  # shows mlx's own progress bar (in "frames": 100 per second)
+                verbose=False,  # progress bar on; _report_progress reroutes it to ours
                 language=language,
                 condition_on_previous_text=False,
                 word_timestamps=True,
@@ -273,6 +276,44 @@ def _glossary_on_every_window(module, prompt: Optional[str]):
         module.DecodingOptions = original
 
 
+@contextlib.contextmanager
+def _report_progress(module, progress: Optional[ProgressFn]):
+    """Route mlx-whisper's internal progress bar into our own progress display.
+
+    mlx-whisper counts "frames" (100 per second of audio) on a tqdm bar. This
+    swaps in a stand-in bar for the duration of one transcription, converts
+    frames to seconds and passes them on. Restored afterwards; if mlx-whisper
+    changes its internals, transcription still works, just without live progress.
+    """
+    original = getattr(module, "tqdm", None)
+    if progress is None or original is None:
+        yield
+        return
+
+    class _Bar:
+        def __init__(self, *args, total=None, **kwargs):
+            self.done = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def update(self, n=1):
+            self.done += n
+            progress(self.done / 100.0)
+
+        def close(self):
+            pass
+
+    module.tqdm = type("tqdm_shim", (), {"tqdm": _Bar})
+    try:
+        yield
+    finally:
+        module.tqdm = original
+
+
 # ---------------------------------------------------------------- faster-whisper
 
 class FasterWhisperBackend(Backend):
@@ -299,7 +340,8 @@ class FasterWhisperBackend(Backend):
                     f"Model {self.model_name} isn't downloaded yet. Connect to the "
                     f"internet once and run: python transcribe.py --download-model"
                 )
-            print(f"Downloading the model {self.model_name} (one time only, about 1.6 GB)...")
+            print(f"Downloading the model {self.model_name} (one time only, up to 1.6 GB)...")
+            _offline_mode(False)
             self.local_path = download_model(self.model_name)
         _offline_mode()
 
@@ -385,6 +427,9 @@ class TestBackend(Backend):
                 index += 1
                 if progress:
                     progress(min(start + self.CHUNK, duration))
+                if os.environ.get("AVTOOL_TEST_DELAY"):  # slow motion, for demos of the app
+                    import time
+                    time.sleep(float(os.environ["AVTOOL_TEST_DELAY"]))
                 if os.environ.get("AVTOOL_TEST_INTERRUPT_AT") and start >= float(os.environ["AVTOOL_TEST_INTERRUPT_AT"]):
                     raise KeyboardInterrupt
         segments: list[Segment] = []

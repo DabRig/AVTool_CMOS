@@ -1,3 +1,4 @@
 # Intel Mac, Windows or Linux without an NVIDIA GPU: faster-whisper on the CPU.
 -r requirements.txt
 faster-whisper>=1.1.0
+pywebview>=5.0       # the AVTool app window

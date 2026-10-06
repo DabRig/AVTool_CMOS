@@ -110,7 +110,7 @@ def test_interrupt_leaves_nothing_half_done(clips, tmp_path, monkeypatch, capsys
     monkeypatch.setenv("AVTOOL_TEST_INTERRUPT_AT", "3")
     code = run_tool(clips, tmp_path=tmp_path)
     assert code == 130
-    assert "Run the same command again" in capsys.readouterr().out
+    assert "continue where it left off" in capsys.readouterr().out
     assert not list(clips.glob("*.json")) and not list(clips.glob("*.partial"))
     assert temp_leftovers(tmp_path) == []
     monkeypatch.delenv("AVTOOL_TEST_INTERRUPT_AT")

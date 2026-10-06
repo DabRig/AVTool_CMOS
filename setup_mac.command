@@ -78,12 +78,14 @@ bold "Step 4/5 · Downloading the Whisper model (one time, about 1.6 GB)"
 .venv/bin/python transcribe.py --download-model
 
 # --- 5. Check -----------------------------------------------------------------
-bold "Step 5/5 · Making test clips and checking everything"
+bold "Step 5/5 · Building the AVTool app, making test clips, checking everything"
+.venv/bin/python -m avtool.gui.make_app >/dev/null && ok "AVTool.app built (in this folder — drag it to your Dock)"
 .venv/bin/python samples/make_samples.py >/dev/null && ok "Test clips made in samples/clips"
-chmod +x Transcribe.command setup_mac.command 2>/dev/null || true
+chmod +x Transcribe.command setup_mac.command update.command 2>/dev/null || true
 trap - ERR
 .venv/bin/python transcribe.py --check || true
 
 bold "Setup complete!"
-echo "  Next: test it on the sample clips — see 'Step 2' in README.md."
+echo "  Next: double-click AVTool.app in this folder (or see README.md)."
+open -R "AVTool.app" 2>/dev/null || true
 read -r -p "Press Enter to close." _ || true

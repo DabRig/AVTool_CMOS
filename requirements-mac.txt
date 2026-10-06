@@ -1,3 +1,4 @@
 # Mac with Apple Silicon (M1/M2/M3/M4): Whisper on the Mac's GPU via MLX.
 -r requirements.txt
 mlx-whisper>=0.4.2
+pywebview>=5.0       # the AVTool app window (native macOS WebKit)

@@ -17,12 +17,13 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from . import __version__
 from .backends import Backend, make_backend
@@ -58,6 +59,15 @@ class Settings:
     keep_awake: bool = True
     dry_run: bool = False
     temp_root: Optional[Path] = None
+    # Used by the app window (avtool/gui): an explicit file list instead of
+    # scanning `path`, a listener for live events, and a Stop button.
+    files: Optional[list] = None
+    on_event: Optional[Callable] = None
+    stop: Optional[threading.Event] = None
+
+
+class StopRequested(KeyboardInterrupt):
+    """The Stop button was pressed. Handled exactly like Ctrl+C."""
 
 
 @dataclass
@@ -94,8 +104,27 @@ class Log:
         self.file.close()
 
 
+_listener: Optional[Callable] = None
+_stop: Optional[threading.Event] = None
+
+
+def emit(kind: str, **data) -> None:
+    """Send a live event to the app window, if one is listening."""
+    if _listener is not None:
+        try:
+            _listener(kind, data)
+        except Exception:
+            pass  # a display problem must never break a transcription
+
+
+def check_stop() -> None:
+    if _stop is not None and _stop.is_set():
+        raise StopRequested
+
+
 def say(message: str = "") -> None:
     print(message, flush=True)
+    emit("log", text=message)
 
 
 def _bar(fraction: float, width: int = 24) -> str:
@@ -106,8 +135,9 @@ def _bar(fraction: float, width: int = 24) -> str:
 class Progress:
     """A per-step progress bar measured in seconds of audio."""
 
-    def __init__(self, label: str, total: float):
+    def __init__(self, label: str, total: float, on_update: Optional[Callable[[float], None]] = None):
         self.total = max(total, 0.001)
+        self.on_update = on_update
         self.bar = None
         if tqdm is not None and sys.stderr.isatty():
             self.bar = tqdm(
@@ -116,6 +146,9 @@ class Progress:
             )
 
     def update(self, seconds_done: float) -> None:
+        check_stop()  # the Stop button takes effect within a second
+        if self.on_update:
+            self.on_update(min(seconds_done / self.total, 1.0))
         if self.bar is not None:
             self.bar.n = round(min(seconds_done, self.total), 1)
             self.bar.refresh()
@@ -210,6 +243,8 @@ def _check_writable(folder: Path) -> Optional[str]:
 
 def plan_jobs(settings: Settings) -> tuple[list[Job], Path]:
     """Find the files and decide where each one's transcripts go."""
+    if settings.files is not None:
+        return _plan_explicit(settings)
     root = settings.path.expanduser().resolve()
     files = scan(root, settings.recursive)
     jobs = []
@@ -225,7 +260,35 @@ def plan_jobs(settings: Settings) -> tuple[list[Job], Path]:
     return jobs, log_dir
 
 
+def _plan_explicit(settings: Settings) -> tuple[list[Job], Path]:
+    """The app window hands over an exact list of files (already scanned)."""
+    sources = [Path(f).expanduser().resolve() for f in settings.files]
+    out = settings.out.expanduser().resolve() if settings.out else None
+    jobs = [Job(src, out or src.parent) for src in sources]
+    if out:
+        log_dir = out
+    else:
+        parents = [str(src.parent) for src in sources] or [str(settings.path)]
+        try:
+            log_dir = Path(os.path.commonpath(parents))
+        except ValueError:
+            log_dir = Path(parents[0])
+        if len(log_dir.parts) <= 2:  # e.g. "/" or "/Volumes": too broad for a log
+            log_dir = Path(parents[0])
+    return jobs, log_dir
+
+
 def run(settings: Settings) -> int:
+    """Run a batch. Wires up the app window's listener and Stop button, if any."""
+    global _listener, _stop
+    _listener, _stop = settings.on_event, settings.stop
+    try:
+        return _run(settings)
+    finally:
+        _listener, _stop = None, None
+
+
+def _run(settings: Settings) -> int:
     started = time.time()
     try:
         jobs, log_dir = plan_jobs(settings)
@@ -240,7 +303,12 @@ def run(settings: Settings) -> int:
         say("No supported media files found. (Tip: --recursive includes subfolders.)")
         return 0
 
-    write_problem = None if settings.dry_run else _check_writable(log_dir)
+    write_problem = None
+    if not settings.dry_run:
+        for folder in sorted({log_dir, *(j.out_dir for j in jobs)}):
+            write_problem = _check_writable(folder)
+            if write_problem:
+                break
     if write_problem:
         say(f"✗ {write_problem}")
         say("  If the files are on a drive the Mac can only read (e.g. NTFS-formatted),")
@@ -293,11 +361,15 @@ def run(settings: Settings) -> int:
     for job in jobs:
         if job.status in ("skipped", "failed"):
             logline(f"{job.status.upper()} | {job.source.name} | {job.note}")
+    emit("plan", jobs=[{"path": str(j.source), "status": j.status, "note": j.note,
+                        "duration": j.duration} for j in jobs])
 
     if settings.dry_run or not pending:
         if log:
             log.close()
-        return _summary(jobs, started, log_dir, settings.dry_run)
+        code = _summary(jobs, started, log_dir, settings.dry_run)
+        emit("end", counts=_count_dict(jobs), interrupted=False, code=code)
+        return code
 
     # 2) Disk space: the temp WAV for the longest file, twice over, plus margin.
     run_dir = make_temp_dir(settings.temp_root)
@@ -315,10 +387,11 @@ def run(settings: Settings) -> int:
         return 2
 
     old_handlers = {}
-    for sig_name in ("SIGTERM", "SIGHUP"):  # closing the Terminal window = clean stop
-        sig = getattr(signal, sig_name, None)
-        if sig is not None:
-            old_handlers[sig] = signal.signal(sig, _raise_interrupt)
+    if threading.current_thread() is threading.main_thread():  # signals only work there
+        for sig_name in ("SIGTERM", "SIGHUP"):  # closing the Terminal window = clean stop
+            sig = getattr(signal, sig_name, None)
+            if sig is not None:
+                old_handlers[sig] = signal.signal(sig, _raise_interrupt)
 
     backend: Optional[Backend] = None
     interrupted = False
@@ -329,6 +402,7 @@ def run(settings: Settings) -> int:
             if prompt:
                 say(f"Glossary: {prompt}" + (" (trimmed: keep it short!)" if glossary.truncated else ""))
             say("Loading the model (the first time can take a minute)...")
+            emit("loading", label=backend.label())
             backend.load()
             logline(f"RUN START | AVTool {__version__} | {backend.label()} | lang={settings.lang} | "
                     f"{len(pending)} file(s), {human_duration(total_audio)}")
@@ -342,15 +416,20 @@ def run(settings: Settings) -> int:
                 else:
                     eta = "time left: estimating after the first file"
                 fraction = audio_done / total_audio if total_audio else 0
+                check_stop()
                 say(f"\n[{n}/{len(pending)}] {job.source.name} · {human_duration(job.duration)}")
                 say(f"  Batch {_bar(fraction)} {fraction:4.0%} · {eta}")
+                eta_seconds = (remaining_audio / (audio_done / time_spent)
+                               if time_spent > 0 and audio_done > 0 else None)
+                emit("batch", index=n, total=len(pending), fraction=fraction, eta=eta_seconds,
+                     audio_total=total_audio, audio_done=audio_done)
                 _process(job, n, backend, settings, style, glossary, prompt, language, run_dir, logline)
                 audio_done += job.duration
                 time_spent += job.seconds_taken
     except KeyboardInterrupt:
         interrupted = True
         say("\n\n■ Stopped. Temp audio removed and no half-written files left behind.")
-        say("  Run the same command again to continue where it left off.")
+        say("  Start again (same files) to continue where it left off.")
         for job in jobs:
             if job.status == "pending":
                 job.status = "interrupted"
@@ -369,13 +448,25 @@ def run(settings: Settings) -> int:
     code = _summary(jobs, started, log_dir, False)
     logline("RUN END | " + _counts(jobs))
     log.close()
-    return 130 if interrupted else code
+    code = 130 if interrupted else code
+    emit("end", counts=_count_dict(jobs), interrupted=interrupted, code=code)
+    return code
 
 
 def _process(job, index, backend, settings, style, glossary, prompt, language, run_dir, logline) -> None:
     """Do one file. Never raises, except for Ctrl+C."""
     t0 = time.time()
     wav = run_dir / f"{index:03d}.wav"  # plain ASCII name; the original name can be anything
+    path = str(job.source)
+
+    def stage(name: str):
+        def update(fraction: float) -> None:
+            emit("progress", path=path, stage=name, fraction=fraction)
+        update(0.0)
+        return update
+
+    emit("file", path=path, state="running")
+    written: list = []
     try:
         remove_partials(job.out_dir, job.source)
         if job.note:
@@ -383,24 +474,20 @@ def _process(job, index, backend, settings, style, glossary, prompt, language, r
         if job.info and len(job.info.audio_tracks) > 1:
             say(f"  Using audio track {job.track.number}: {job.track.describe()}")
 
-        bar = Progress("Extracting audio", job.duration)
+        bar = Progress("Extracting audio", job.duration, stage("extract"))
         try:
             wav_seconds = extract_audio(job.source, wav, job.track, settings.boost_quiet, bar.update)
         finally:
             bar.close()
         duration = job.duration or wav_seconds
 
-        if backend.name == "mlx":
-            say("  Transcribing (progress below is in 'frames': 100 per second of audio)")
-            bar = None
-        else:
-            bar = Progress("Transcribing", duration)
+        bar = Progress("Transcribing", duration, stage("transcribe"))
         try:
-            result = backend.transcribe(wav, duration, language, prompt, bar.update if bar else None)
+            result = backend.transcribe(wav, duration, language, prompt, bar.update)
         finally:
-            if bar:
-                bar.close()
+            bar.close()
 
+        stage("write")
         segments = clean_segments(result.segments, prompt)
         written = write_all(
             job.out_dir, job.source, segments,
@@ -438,6 +525,13 @@ def _process(job, index, backend, settings, style, glossary, prompt, language, r
     finally:
         if wav.exists():
             wav.unlink()  # temp audio never outlives its file
+        emit("file", path=path, state=job.status, note=job.note,
+             seconds=round(time.time() - t0, 1), outputs=[str(p) for p in written])
+
+
+def _count_dict(jobs: list[Job]) -> dict:
+    states = ("done", "done-before", "skipped", "failed", "interrupted")
+    return {state: sum(1 for j in jobs if j.status == state) for state in states}
 
 
 def _counts(jobs: list[Job]) -> str:

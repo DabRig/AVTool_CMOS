@@ -13,6 +13,43 @@ Turn video and audio files into accurate, timestamped transcripts and subtitles,
 
 ---
 
+## The AVTool app (V1.0)
+
+**AVTool.app** is a window you double-click, styled like an audio plugin. It does
+everything the Terminal commands below do, without typing.
+
+- **Open it:** double-click **AVTool.app** in the AVTool folder. Drag it to your
+  Dock to keep it handy. The first time, macOS may ask to let AVTool use files on
+  your external drive. Click **Allow**.
+- **Queue rack (left):** drag videos or whole folders from Finder onto the window,
+  or use **＋ FILES / ＋ FOLDER**. Each row shows its length, a progress bar and
+  its status: READY, TRANSCRIBE 42%, DONE, NO AUDIO, FAILED. Hover over a
+  status to see why. The row buttons view the transcript, show the file in
+  Finder, or remove it from the queue.
+- **START / STOP (bottom):** the meter, the stage lights (EXTRACT › TRANSCRIBE ›
+  WRITE), the percentage and the time left update live. STOP finishes cleanly:
+  no temp files, no half-written transcripts. START picks up where it stopped.
+- **SETTINGS tab:**
+  - The **QUALITY knob** (Draft / Balanced / Best): click it, drag it up or down,
+    or click a label.
+  - **Language** and **caption style** (Standard for Premiere/CapCut, Reels for
+    vertical video).
+  - Switches: **Boost quiet voices**, **Include subfolders**, **Redo finished
+    files**, **Keep Mac awake**.
+  - Where transcripts are saved, and which files to make.
+  - Settings lock while a batch runs.
+- **GLOSSARY tab:** edit the names list (Evan, Smooth Scaling, Lightning OS…) and
+  click **SAVE GLOSSARY**.
+- **VIEWER tab:** read any finished transcript with timestamps. You can search
+  it, click a line to copy it, or open the TXT / SRT / DOCX.
+- **LOG tab:** the same running commentary the Terminal version prints.
+
+**Updating later:** open Terminal and run
+`cd ~/Documents/AVTool && bash update.command`. It downloads the newest version
+and keeps your glossary, settings and transcripts.
+
+---
+
 ## Step 1 — Install (one time, about 15 minutes)
 
 You need internet for this step only.
@@ -31,7 +68,8 @@ You need internet for this step only.
 
    It installs, in order: Homebrew (the Mac's installer for tools like this),
    **ffmpeg** (reads video files), **Python 3.12**, the **MLX Whisper** engine
-   (runs on your M2 Pro's GPU), and the **Whisper large-v3-turbo** model (≈1.6 GB).
+   (runs on your M2 Pro's GPU), the **Whisper large-v3-turbo** model (≈1.6 GB), and
+   builds **AVTool.app**.
    If it asks for your Mac password, type it and press Enter. Nothing appears
    while you type, and that's normal.
 
@@ -201,6 +239,8 @@ Wi-Fi and it still works.
 
 ```
 transcribe.py          entry point (python transcribe.py --help)
+avtool/gui/            the app: server.py (local API), app.py (window), make_app.py
+                       (builds AVTool.app), static/ (HTML/CSS/JS, logo, fonts)
 avtool/cli.py          options, config.toml, --check / --list-tracks / --download-model
 avtool/batch.py        the batch loop: probe, disk check, keep-awake, resume, log, summary
 avtool/media.py        scan, ffprobe, ffmpeg audio extraction (argument lists, streamed)
@@ -224,6 +264,9 @@ automatically), or by hand: `pip install -r requirements-cpu.txt`
 - [Buzz](https://github.com/chidiwilliams/buzz) by Chidi Williams (MIT):
   inspired the per-machine engine choice (detect hardware, pick the fastest
   engine, allow an override) and the CLI design. No Buzz code was copied.
+- [pywebview](https://github.com/r0x0r/pywebview) (BSD): the app's native window.
+- [Inter](https://github.com/rsms/inter) typeface (SIL OFL 1.1), bundled for the
+  app's lettering. The SS monogram is traced from Inter Display Black Italic.
 - [Vibe](https://github.com/thewh1teagle/vibe) by thewh1teagle (MIT): inspired
   the reels caption preset and building captions from word timings for steady
   timestamps. Ideas only; no code was copied.

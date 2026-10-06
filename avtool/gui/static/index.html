@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVTool — Sebastian Success</title>
+<link rel="icon" href="img/logo.svg">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="plugin" id="plugin">
+  <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+
+  <!-- ============ HEADER ============ -->
+  <header class="head">
+    <div class="brand">
+      <img class="logo" src="img/logo.svg" alt="">
+      <div class="brand-text">
+        <h1 class="chrome-text">SEBASTIAN SUCCESS</h1>
+        <div class="sub hud">AV TRANSCRIBER <span class="sep">//</span> V<span id="ver">1.0</span> <span class="sep">//</span> OFFLINE SPEECH-TO-TEXT</div>
+      </div>
+    </div>
+    <div class="readouts">
+      <div class="readout" title="Which engine transcribes on this computer">
+        <span class="hud lbl">ENGINE</span><span class="val"><i class="led" id="led-engine"></i><span id="engine-label">CHECKING…</span></span>
+      </div>
+      <div class="readout" title="Speech model">
+        <span class="hud lbl">MODEL</span><span class="val"><i class="led" id="led-model"></i><span id="model-label">—</span></span>
+      </div>
+      <div class="readout" title="Nothing is ever uploaded">
+        <span class="hud lbl">NETWORK</span><span class="val"><i class="led on"></i>LOCAL ONLY</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ BODY ============ -->
+  <main class="body">
+    <!-- Queue rack -->
+    <section class="rack panel" aria-label="Queue">
+      <div class="panel-title">
+        <span class="hud">QUEUE RACK</span>
+        <span class="hud dim" id="queue-meta">0 FILES</span>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="btn-add-files" title="Pick video or audio files">＋ FILES</button>
+        <button class="btn" id="btn-add-folder" title="Pick a folder of videos">＋ FOLDER</button>
+        <form class="path-form" id="path-form" autocomplete="off">
+          <input id="path-input" class="field" type="text" spellcheck="false"
+                 placeholder="…or paste a file / folder path and press Enter" aria-label="File or folder path">
+        </form>
+        <button class="btn ghost" id="btn-clear" title="Remove finished, skipped and failed rows">CLEAR DONE</button>
+      </div>
+
+      <div class="rows" id="rows" role="list"></div>
+
+      <div class="drop" id="drop">
+        <div class="drop-inner">
+          <div class="drop-ring"><img src="img/logo.svg" alt=""></div>
+          <div class="drop-title">DROP VIDEOS OR FOLDERS HERE</div>
+          <div class="drop-sub">.mov · .mp4 · .mkv · .webm · .wmv · .mp3 · .wav · .flac · .aac · .m4a</div>
+          <div class="drop-sub dim">or use ＋ FILES / ＋ FOLDER above</div>
+        </div>
+      </div>
+      <div class="drop-overlay" id="drop-overlay"><span>RELEASE TO ADD</span></div>
+    </section>
+
+    <!-- Side panel with tabs -->
+    <section class="side panel" aria-label="Controls">
+      <nav class="tabs" role="tablist">
+        <button class="tab active" role="tab" data-tab="settings">SETTINGS</button>
+        <button class="tab" role="tab" data-tab="glossary">GLOSSARY</button>
+        <button class="tab" role="tab" data-tab="viewer">VIEWER</button>
+        <button class="tab" role="tab" data-tab="log">LOG</button>
+      </nav>
+
+      <!-- SETTINGS -->
+      <div class="tabpane active" id="tab-settings" role="tabpanel">
+        <div class="knob-row">
+          <div class="knob-wrap">
+            <div class="knob" id="knob-model" tabindex="0" role="slider" aria-label="Quality"
+                 aria-valuemin="0" aria-valuemax="2" aria-valuenow="2">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <defs>
+                  <linearGradient id="kc" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#aebdd0"/>
+                    <stop offset=".5" stop-color="#6b7d97"/><stop offset="1" stop-color="#dbe6f4"/>
+                  </linearGradient>
+                  <radialGradient id="kf" cx="50%" cy="35%" r="65%">
+                    <stop offset="0" stop-color="#1b3c7a"/><stop offset="1" stop-color="#06112b"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="60" cy="60" r="56" class="knob-arc-bg"/>
+                <path class="knob-arc" id="knob-arc" d=""/>
+                <circle cx="60" cy="60" r="42" fill="url(#kc)"/>
+                <circle cx="60" cy="60" r="37" fill="url(#kf)"/>
+                <g id="knob-pointer"><rect x="58" y="27" width="4" height="16" rx="2" class="knob-ptr"/></g>
+              </svg>
+            </div>
+            <div class="knob-labels"><span data-v="0">DRAFT</span><span data-v="1">BALANCED</span><span data-v="2">BEST</span></div>
+            <div class="hud lbl center">QUALITY</div>
+            <div class="knob-value" id="knob-value">LARGE-V3-TURBO</div>
+          </div>
+          <div class="stack">
+            <div class="ctl">
+              <div class="hud lbl">LANGUAGE</div>
+              <div class="seg" data-setting="lang">
+                <button data-value="en">EN</button><button data-value="auto">AUTO</button><button data-value="es">ES</button>
+              </div>
+            </div>
+            <div class="ctl">
+              <div class="hud lbl">CAPTIONS</div>
+              <div class="seg" data-setting="captions">
+                <button data-value="standard" title="≤42 characters × 2 lines — Premiere, CapCut, DaVinci">STANDARD</button>
+                <button data-value="reels" title="Short one-line captions for vertical video">REELS</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="switches">
+          <label class="switch"><input type="checkbox" data-setting="boost_quiet"><span class="track"><span class="thumb"></span></span>
+            <span class="sw-text">Boost quiet voices<small>Helps catch audience questions</small></span></label>
+          <label class="switch"><input type="checkbox" data-setting="recursive"><span class="track"><span class="thumb"></span></span>
+            <span class="sw-text">Include subfolders<small>When adding a folder</small></span></label>
+          <label class="switch"><input type="checkbox" data-setting="force"><span class="track"><span class="thumb"></span></span>
+            <span class="sw-text">Redo finished files<small>Re-transcribe even if done</small></span></label>
+          <label class="switch"><input type="checkbox" data-setting="keep_awake"><span class="track"><span class="thumb"></span></span>
+            <span class="sw-text">Keep Mac awake<small>During long batches</small></span></label>
+        </div>
+
+        <div class="ctl">
+          <div class="hud lbl">SAVE TRANSCRIPTS</div>
+          <div class="seg" id="out-mode">
+            <button data-value="next">NEXT TO VIDEO</button><button data-value="custom">CUSTOM FOLDER</button>
+          </div>
+          <div class="out-path" id="out-path" hidden>
+            <span class="mono" id="out-path-text">—</span>
+            <button class="btn small" id="btn-outdir">CHOOSE…</button>
+          </div>
+        </div>
+
+        <div class="ctl">
+          <div class="hud lbl">OUTPUT FILES</div>
+          <div class="chips" id="formats">
+            <button data-fmt="txt" title="Clean readable transcript">TXT</button>
+            <button data-fmt="timestamped" title="Every line starts with [HH:MM:SS]">TIMESTAMPED</button>
+            <button data-fmt="srt" title="Subtitles for Premiere / CapCut / DaVinci">SRT</button>
+            <button data-fmt="vtt" title="Subtitles for web players">VTT</button>
+            <button data-fmt="docx" title="Word document">DOCX</button>
+            <button data-fmt="json" class="locked" title="Always written: marks a file as finished" disabled>JSON</button>
+          </div>
+        </div>
+        <p class="lock-note hud" id="lock-note" hidden>SETTINGS LOCKED WHILE RUNNING</p>
+      </div>
+
+      <!-- GLOSSARY -->
+      <div class="tabpane" id="tab-glossary" role="tabpanel">
+        <p class="help">Names and terms Whisper should spell correctly, one per line. To fix a word it keeps mishearing, write <code>wrong -&gt; Right</code>.</p>
+        <textarea id="glossary-text" class="field mono" spellcheck="false" aria-label="Glossary"></textarea>
+        <div class="row-between">
+          <span class="hud dim" id="glossary-count">0 TERMS</span>
+          <button class="btn primary" id="btn-glossary-save">SAVE GLOSSARY</button>
+        </div>
+        <p class="help dim">Keep it short (a few dozen terms). After changing it, turn on <b>Redo finished files</b> to apply it to videos already done.</p>
+      </div>
+
+      <!-- VIEWER -->
+      <div class="tabpane" id="tab-viewer" role="tabpanel">
+        <div class="viewer-head">
+          <select id="viewer-select" class="field" aria-label="Transcript to view"></select>
+          <input id="viewer-search" class="field" type="search" placeholder="Search…" aria-label="Search transcript">
+        </div>
+        <div class="viewer-meta hud dim" id="viewer-meta"></div>
+        <div class="viewer-lines" id="viewer-lines"><div class="empty">Finished transcripts appear here. Click a line to copy it.</div></div>
+        <div class="viewer-actions">
+          <button class="btn small" data-open="txt">OPEN TXT</button>
+          <button class="btn small" data-open="srt">OPEN SRT</button>
+          <button class="btn small" data-open="docx">OPEN DOCX</button>
+          <button class="btn small" id="btn-copy-all">COPY ALL</button>
+          <button class="btn small ghost" id="btn-reveal">SHOW IN FINDER</button>
+        </div>
+      </div>
+
+      <!-- LOG -->
+      <div class="tabpane" id="tab-log" role="tabpanel">
+        <pre class="console mono" id="console"></pre>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ TRANSPORT ============ -->
+  <footer class="transport">
+    <div class="transport-buttons">
+      <button class="btn-start" id="btn-start"><span class="tri"></span><span>START</span></button>
+      <button class="btn-stop" id="btn-stop" disabled><span class="sq"></span><span>STOP</span></button>
+    </div>
+    <div class="meter-block">
+      <div class="now"><span class="hud lbl">NOW</span> <span id="now-text">IDLE — ADD FILES TO BEGIN</span></div>
+      <div class="meter" id="meter" aria-hidden="true"></div>
+      <div class="stages hud">
+        <span data-stage="extract">EXTRACT</span><span class="arrow">›</span>
+        <span data-stage="transcribe">TRANSCRIBE</span><span class="arrow">›</span>
+        <span data-stage="write">WRITE</span>
+      </div>
+    </div>
+    <div class="lcd">
+      <div class="lcd-cell"><span class="hud lbl">PROGRESS</span><span class="seg7" id="lcd-pct">000%</span></div>
+      <div class="lcd-cell"><span class="hud lbl">TIME LEFT</span><span class="seg7" id="lcd-eta">--:--:--</span></div>
+      <div class="lcd-cell counts">
+        <span title="Done"><i class="led on"></i><b id="c-done">0</b></span>
+        <span title="Skipped"><i class="led warn"></i><b id="c-skip">0</b></span>
+        <span title="Failed"><i class="led bad"></i><b id="c-fail">0</b></span>
+      </div>
+    </div>
+  </footer>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Status against SPEC.md
 
-Written Oct 6, 2026, for version 0.3.0 (Rendition 3 + project setup).
+Written Oct 6, 2026. Updated for **V1.0** (the AVTool app) on top of Rendition 3.
 
 ## 1. Review of the starting point
 
@@ -17,7 +17,7 @@ here, on a structure small enough to own and extend.
 | R2: folder input, ffprobe check, every format, five outputs, temp cleanup, log | ✅ plus `.docx` and `.m4a` |
 | R3: resume/skip, per-file errors, progress bars, disk-space check, glossary, setup script | ✅ |
 | Phase 4: README, `requirements*.txt`, `config.toml`, `samples/` | ✅ |
-| R4: GUI, speaker labels, reels preset, watch folder, summaries/chapters | ◐ only the **reels caption preset** so far (see section 5) |
+| R4: GUI, speaker labels, reels preset, watch folder, summaries/chapters | ◐ **GUI (AVTool.app, V1.0)** and **reels preset** done; the rest is still to do (see section 5) |
 
 ## 3. Spec requirements: how each is met
 
@@ -80,8 +80,20 @@ parsing. Real transcription quality and speed can only be judged on the Mac.
 
 1. **Speaker labels** ("Evan:" / "Question:"), via pyannote or WhisperX. Needs a free
    Hugging Face token, adds setup, and will be optional.
-2. **Simple window (GUI):** pick folder, options, Start, progress.
-3. **Watch folder:** auto-transcribe new files dropped into a folder (Buzz-style).
-4. **Summary and chapter markers** per file.
-5. **Noisy-audio cleanup** (speech separation, as in Buzz), if `--boost-quiet` isn't enough.
-6. Windows setup script is written but **untested on real Windows hardware**.
+2. **Watch folder:** auto-transcribe new files dropped into a folder (Buzz-style).
+3. **Summary and chapter markers** per file.
+4. **Noisy-audio cleanup** (speech separation, as in Buzz), if `--boost-quiet` isn't enough.
+5. Windows setup script is written but **untested on real Windows hardware**.
+
+## 6. V1.0: the AVTool app
+
+| Piece | Status |
+| --- | --- |
+| Native Mac window (pywebview/WebKit) opened from **AVTool.app** with the SS icon | ✅ built by `setup_mac.command`. ⏳ first real launch is on your Mac |
+| Batch queue, drag-and-drop, ＋FILES/＋FOLDER (native Finder pickers), live progress, STOP/resume | ✅ tested in a browser with the test engine. ⏳ drag-and-drop from Finder only works in the Mac window |
+| Settings panel: quality knob, language, captions, switches, output folder, formats | ✅ tested |
+| Transcript viewer (search, click-to-copy, open TXT/SRT/DOCX, show in Finder) | ✅ tested |
+| Glossary editor | ✅ tested |
+| Security: listens on 127.0.0.1 only, random per-launch key, Host check, page allowed to load only its own files, only the app's own media and outputs can be opened | ✅ automated tests |
+| Live progress from the Mac engine (mlx-whisper) | ✅ its internal progress bar is rerouted to the app (checked with a tiny test model) |
+| `update.command`: one-command updates that keep glossary, settings and transcripts | ✅ written. ⏳ first real use on your Mac |
