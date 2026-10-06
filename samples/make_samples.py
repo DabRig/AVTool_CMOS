@@ -53,9 +53,15 @@ def encoders(ff: str) -> set[str]:
 def make_speech(ff: str, work: Path, source: str | None, start: float, seconds: float) -> tuple[Path, str]:
     speech = work / "speech.wav"
     if source:
+        if not Path(source).is_file():
+            sys.exit(f"Can't find that file: {source}")
+        length = duration_of(ff, Path(source))
+        if start >= length:
+            print(f"(That video is only {length:.0f} s long, so cutting from the start instead.)")
+            start = 0
         ok = run([ff, "-y", "-nostdin", "-ss", str(start), "-t", str(seconds), "-i", source,
                   "-map", "0:a:0", "-vn", "-ac", "2", "-ar", "44100", "-c:a", "pcm_s16le", str(speech)])
-        if ok:
+        if ok and duration_of(ff, speech) > 1:
             return speech, f"cut from {Path(source).name}"
         sys.exit("Couldn't cut audio from that file.")
     if shutil.which("say"):
@@ -79,13 +85,19 @@ def duration_of(ff: str, path: Path) -> float:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--from", dest="source", help="cut the test audio from this real file")
+    ap.add_argument("--from", dest="source", nargs="?", const="ASK",
+                    help="cut the test audio from this real file (leave empty to drag one in)")
     ap.add_argument("--start", type=float, default=0, help="where to start cutting (seconds)")
     ap.add_argument("--seconds", type=float, default=60, help="how much to cut (seconds)")
     ap.add_argument("--out", default=str(CLIPS), help="where to put the clips")
     args = ap.parse_args()
 
     ff = ffmpeg()
+    if args.source == "ASK":
+        sys.path.insert(0, str(HERE.parent))
+        from avtool.cli import clean_dragged_path
+        print("Drag one of your video files into this window, then press Enter:")
+        args.source = clean_dragged_path(input("> "))
     have = encoders(ff)
     out = Path(args.out)
     if out.exists():
