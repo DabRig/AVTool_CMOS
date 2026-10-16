@@ -1,0 +1,276 @@
+<title>Sebastian Success Mail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: a night-sky console. The message form on the left, the live email on the right; stacks on phones. */
+:root {
+  --space: #060a1a;
+  --panel: #0d1430;
+  --field: #0a1027;
+  --line: #24305e;
+  --ink: #e9edfb;
+  --muted: #9aa6cf;
+  --brand: #0566ff;
+  --brand-hi: #4d93ff;
+  --ok: #6fe3a8;
+  --warn: #ffc46b;
+  --display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--space);
+  color: var(--ink);
+  font: 16px/1.55 var(--body);
+  padding-inline: 16px;
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 32px; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); align-items: start; }
+.side { display: grid; gap: 22px; min-width: 0; }
+h1 { font: 600 1.55rem/1.2 var(--display); letter-spacing: 0.12em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+form { display: grid; gap: 16px; margin: 0; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label, .label { font: 600 0.78rem/1.2 var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.hint { color: var(--muted); font-size: 0.85rem; margin: 0; }
+input[type="text"], textarea {
+  width: 100%; min-width: 0; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+  font: 16px/1.5 var(--body);
+}
+textarea { resize: vertical; min-height: 230px; }
+input[type="text"]:focus-visible, textarea:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 1px; border-color: var(--brand-hi); }
+.check { display: flex; gap: 10px; align-items: center; font-size: 0.95rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--brand); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.sample { font-size: 0.85rem; color: var(--warn); margin: 0; }
+.ghost {
+  appearance: none; cursor: pointer; background: transparent; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; font: 600 0.82rem/1.2 var(--body);
+}
+.ghost:hover { color: var(--ink); border-color: var(--muted); }
+.copy {
+  appearance: none; border: 0; cursor: pointer; width: 100%;
+  font: 600 1.05rem/1 var(--body); letter-spacing: 0.02em;
+  color: #fff; background: var(--brand);
+  padding: 16px 18px; border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 24px rgba(5,102,255,0.35);
+  transition: background 0.15s, transform 0.1s;
+}
+.copy:hover { background: var(--brand-hi); }
+.copy:active { transform: translateY(1px); }
+.copy:focus-visible, .ghost:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.status { min-height: 1.5em; margin: -8px 0 0; color: var(--ok); font-weight: 600; }
+.status.warn { color: var(--warn); }
+ol { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 12px; }
+ol li { counter-increment: step; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 0.95rem; }
+ol li::before {
+  content: counter(step); font: 600 0.8rem/28px var(--display); text-align: center;
+  width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); color: var(--brand-hi);
+}
+kbd { font: 600 0.85em var(--body); padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--panel); }
+.note { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--line); padding-top: 14px; margin: 0; }
+.preview-col { min-width: 0; }
+.preview { min-width: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #F4F4F2; }
+.preview-label { font: 600 0.72rem/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .copy { transition: none; } }
+</style>
+
+<div class="wrap">
+  <section class="side" aria-labelledby="t">
+    <div>
+      <h1 id="t">Sebastian Success</h1>
+      <p class="sub">Write the message, copy it, paste it into Gmail. The space banner, signature and sparkle lines come along.</p>
+    </div>
+
+    <form id="form" autocomplete="off">
+      <div class="field">
+        <div class="row">
+          <label class="label" for="msg">Message</label>
+          <button class="ghost" id="clear" type="button">Clear message</button>
+        </div>
+        <textarea id="msg" spellcheck="true"></textarea>
+        <p class="hint">One line per thought. Emojis welcome. A blank line adds a little space.</p>
+        <p class="sample" id="sampleNote" hidden>Example text from your last reply to Dylan. Replace it with your new message.</p>
+      </div>
+      <div class="field">
+        <label for="banner">Line under the banner</label>
+        <input type="text" id="banner">
+      </div>
+      <div class="field">
+        <label for="signoff">Sign-off line</label>
+        <input type="text" id="signoff">
+      </div>
+      <label class="check" for="sigOn"><input type="checkbox" id="sigOn"> Include handwritten signature</label>
+      <div class="field">
+        <label for="footer">Footer</label>
+        <input type="text" id="footer">
+      </div>
+    </form>
+
+    <button class="copy" id="copy" type="button">Copy email</button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <ol>
+      <li><span>Write or paste your message above.</span></li>
+      <li><span>Click <strong>Copy email</strong>.</span></li>
+      <li><span>In Gmail, start the email or reply, add the subject, click into the message and press <kbd>⌘</kbd> <kbd>V</kbd>.</span></li>
+      <li><span>Attach any files and hit <strong>Send</strong>.</span></li>
+    </ol>
+    <p class="note">Your text stays in this browser between visits. The stars move in Gmail, Apple Mail and on phones; Outlook for Windows shows a still banner.</p>
+  </section>
+
+  <section class="preview-col" aria-label="Email preview">
+    <p class="preview-label">Live preview</p>
+    <div class="preview" id="preview"></div>
+  </section>
+</div>
+
+<script>
+const PUBLIC = /*PUBLIC_URLS*/null;   // images as Gmail will load them
+const EMBED = /*EMBED_URLS*/null;     // same images inlined, for this preview
+const SAMPLE = [
+  "🌅 Grand Rising, brother.",
+  "📅 Here is my schedule today.",
+  "🎧 The WAV and the TXT are attached together, ready for your QA.",
+  "📦 After that, I am packing my belongings and loading the Pelican with gear.",
+  "🚀 Let's get 'er done, feller!"
+].join("\n");
+const TODAY = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+const DEFAULTS = {
+  msg: SAMPLE,
+  banner: "Grand Rising, brother · " + TODAY,
+  signoff: "🌠 Sebastian Success",
+  sigOn: true,
+  footer: "Sebastian Success"
+};
+const KEY = "sebastian-success-mail-v1";
+const $ = (id) => document.getElementById(id);
+const fields = ["msg", "banner", "signoff", "sigOn", "footer"];
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const FONT = "font-family:Georgia,'Times New Roman',serif;";
+const P = FONT + "font-size:17px;line-height:27px;color:#16204E;margin:0 0 10px";
+
+function buildEmail(img, f) {
+  const lines = f.msg.replace(/\r/g, "").split("\n");
+  // collapse runs of blank lines and trim leading/trailing blanks
+  const body = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (line) body.push('<div style="' + P + '">' + esc(line) + "</div>");
+    else if (body.length && body[body.length - 1] !== "SPACER") body.push("SPACER");
+  }
+  while (body[body.length - 1] === "SPACER") body.pop();
+  const spacer = '<div style="height:10px;line-height:10px;font-size:10px">&nbsp;</div>';
+  const bodyHtml = body.map((b) => (b === "SPACER" ? spacer : b)).join("\n");
+
+  const banner = f.banner.trim();
+  const signoff = f.signoff.trim();
+  const footer = f.footer.trim();
+  const divider = '<tr><td bgcolor="#FFFFFF" style="padding:0;line-height:0;background:#FFFFFF"><img src="' + img.divider +
+    '" width="600" height="18" alt="" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>';
+
+  return '<div dir="ltr"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F4F4F2" style="width:100%;background:#F4F4F2">\n' +
+    '<tr><td align="center" style="padding:18px 8px 34px">\n' +
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#050A1C" style="width:100%;max-width:600px;background:#050A1C">\n' +
+    '<tr><td align="center" bgcolor="#050A1C" style="padding:20px 20px ' + (banner ? "14px" : "20px") + ';line-height:0;background:#050A1C"><img src="' + img.hero +
+    '" width="560" height="280" alt="Sebastian Success. From the desk of Sebastian." style="display:block;width:100%;max-width:560px;height:auto;border:0"></td></tr>\n' +
+    (banner ? '<tr><td align="center" bgcolor="#050A1C" style="padding:0 24px 22px;background:#050A1C;' + FONT +
+      'font-style:italic;font-size:19px;line-height:27px;color:#E8ECFA">' + esc(banner) + "</td></tr>\n" : "") +
+    divider + "\n" +
+    '<tr><td bgcolor="#FFFFFF" style="padding:26px 28px 30px;background:#FFFFFF">\n' +
+    bodyHtml + "\n" +
+    (f.sigOn || signoff ? '<div style="height:6px;line-height:6px;font-size:6px">&nbsp;</div>\n' : "") +
+    (f.sigOn ? '<img src="' + img.sig + '" width="240" height="42" alt="Sebastian Success" style="display:block;width:240px;height:auto;border:0;margin:0 0 8px">\n' : "") +
+    (signoff ? '<div style="' + P + '">' + esc(signoff) + "</div>\n" : "") +
+    "</td></tr>\n" + divider + "\n</table>\n" +
+    (footer ? '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px"><tr><td align="center" style="padding:16px 24px 0;' +
+      FONT + 'font-size:12px;line-height:18px;color:#8A8A8A">' + esc(footer) + "</td></tr></table>\n" : "") +
+    "</td></tr></table></div>";
+}
+
+function buildText(f) {
+  const out = [];
+  if (f.banner.trim()) out.push(f.banner.trim(), "");
+  for (const raw of f.msg.replace(/\r/g, "").split("\n")) out.push(raw.trim());
+  out.push("");
+  if (f.signoff.trim()) out.push(f.signoff.trim());
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+}
+
+function read() {
+  return {
+    msg: $("msg").value, banner: $("banner").value, signoff: $("signoff").value,
+    sigOn: $("sigOn").checked, footer: $("footer").value
+  };
+}
+
+function render() {
+  const f = read();
+  $("preview").innerHTML = buildEmail(EMBED, f);
+  $("sampleNote").hidden = f.msg !== SAMPLE;
+  try { localStorage.setItem(KEY, JSON.stringify(f)); } catch (e) {}
+}
+
+function load() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+  const f = Object.assign({}, DEFAULTS, saved);
+  $("msg").value = f.msg; $("banner").value = f.banner; $("signoff").value = f.signoff;
+  $("sigOn").checked = !!f.sigOn; $("footer").value = f.footer;
+}
+
+function say(msg, warn) {
+  $("status").textContent = msg;
+  $("status").classList.toggle("warn", !!warn);
+}
+
+// Put rich HTML on the clipboard. First a copy-event override (works in
+// locked-down frames), then the async Clipboard API.
+async function copyEmail() {
+  const f = read();
+  if (!f.msg.trim()) { say("Write a message first.", true); $("msg").focus(); return; }
+  const htmlOut = buildEmail(PUBLIC, f);
+  const textOut = buildText(f);
+  let done = false;
+  const onCopy = (e) => {
+    e.clipboardData.setData("text/html", htmlOut);
+    e.clipboardData.setData("text/plain", textOut);
+    e.preventDefault();
+    done = true;
+  };
+  document.addEventListener("copy", onCopy);
+  try { document.execCommand("copy"); } catch (e) {}
+  document.removeEventListener("copy", onCopy);
+  if (!done && navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([htmlOut], { type: "text/html" }),
+        "text/plain": new Blob([textOut], { type: "text/plain" })
+      })]);
+      done = true;
+    } catch (e) {}
+  }
+  if (done) {
+    $("copy").textContent = "Copied";
+    say("Copied. Now paste it into Gmail with ⌘V.");
+    setTimeout(() => { $("copy").textContent = "Copy email"; }, 2500);
+  } else {
+    say("This browser blocked copying. Open this page in Chrome on your Mac and try again.", true);
+  }
+}
+
+load();
+render();
+for (const id of fields) $(id).addEventListener("input", () => { say(""); render(); });
+$("clear").addEventListener("click", () => { $("msg").value = ""; render(); $("msg").focus(); });
+$("copy").addEventListener("click", copyEmail);
+$("form").addEventListener("submit", (e) => e.preventDefault());
+</script>
