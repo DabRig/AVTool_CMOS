@@ -67,7 +67,7 @@ def soft_noise(rng, h, w, scale):
     return np.asarray(img.filter(ImageFilter.GaussianBlur(scale / 2)), dtype=np.float32) / 255
 
 
-def space_background(rng):
+def space_background(rng, dy=0):
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
     base = np.zeros((H, W, 3), np.float32)
     # deep navy -> near black vertical gradient
@@ -79,7 +79,7 @@ def space_background(rng):
     base += n1[..., None] * np.array([10, 60, 170], np.float32) * 0.9
     base += n2[..., None] * np.array([90, 30, 140], np.float32) * 0.7
     # glow behind the logo
-    d = np.sqrt(((xx - W / 2) / 260) ** 2 + ((yy - 190) / 200) ** 2)
+    d = np.sqrt(((xx - W / 2) / 260) ** 2 + ((yy - 190 - dy) / 200) ** 2)
     base += np.exp(-d ** 2)[..., None] * np.array([10, 45, 120], np.float32)
     # vignette
     v = np.sqrt(((xx - W / 2) / (W * 0.7)) ** 2 + ((yy - H / 2) / (H * 0.8)) ** 2)
@@ -126,9 +126,10 @@ def load_logo(size):
     return logo
 
 
-def build_hero(script_line):
+def build_hero(script_line, dy=0):
+    """dy shifts the logo and title block down (used to re-centre it when there is no script line)."""
     rng = np.random.default_rng(7)
-    bg = space_background(rng)
+    bg = space_background(rng, dy)
 
     # static dust: many faint pinpoints
     for _ in range(900):
@@ -158,7 +159,7 @@ def build_hero(script_line):
 
     # logo with a soft brand-blue halo and a thin light rim
     logo = load_logo(230)
-    lx, ly = (W - logo.width) // 2, 190 - logo.height // 2
+    lx, ly = (W - logo.width) // 2, 190 + dy - logo.height // 2
     alpha = logo.split()[3]
     halo = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     glow = Image.new("RGBA", logo.size, (60, 140, 255, 255))
@@ -180,12 +181,13 @@ def build_hero(script_line):
     script_f = font("CormorantItalic.ttf", 36, weight=500)
     shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    spaced_text(sd, W / 2, 392, "SEBASTIAN SUCCESS", title_f, (0, 0, 0, 220), 14)
+    spaced_text(sd, W / 2, 392 + dy, "SEBASTIAN SUCCESS", title_f, (0, 0, 0, 220), 14)
     shadow = shadow.filter(ImageFilter.GaussianBlur(6))
-    spaced_text(td, W / 2, 390, "SEBASTIAN SUCCESS", title_f, (246, 248, 255, 255), 14)
-    spaced_text(td, W / 2, 438, "FROM THE DESK OF SEBASTIAN", sub_f, (196, 210, 240, 255), 9)
-    td.line([(W / 2 - 70, 466), (W / 2 + 70, 466)], fill=(120, 160, 230, 200), width=2)
-    td.text((W / 2, 515), script_line, font=script_f, fill=(232, 236, 250, 255), anchor="ms")
+    spaced_text(td, W / 2, 390 + dy, "SEBASTIAN SUCCESS", title_f, (246, 248, 255, 255), 14)
+    spaced_text(td, W / 2, 438 + dy, "FROM THE DESK OF SEBASTIAN", sub_f, (196, 210, 240, 255), 9)
+    td.line([(W / 2 - 70, 466 + dy), (W / 2 + 70, 466 + dy)], fill=(120, 160, 230, 200), width=2)
+    if script_line:
+        td.text((W / 2, 515), script_line, font=script_f, fill=(232, 236, 250, 255), anchor="ms")
 
     frames = []
     for f in range(FRAMES):
@@ -297,14 +299,19 @@ def write_gif(frames, path, lossy=60):
 
 
 def main():
-    script_line = sys.argv[1] if len(sys.argv) > 1 else "Let's get 'er done, feller · October 6, 2026"
     os.makedirs(OUT, exist_ok=True)
-    hero = build_hero(script_line)
-    write_gif(hero, os.path.join(OUT, "hero.gif"))
-    hero[0].save(os.path.join(OUT, "hero-still.png"))
+    # Evergreen banner for the composer: no greeting baked in (the greeting is live text under it).
+    space = build_hero("", dy=24)
+    write_gif(space, os.path.join(OUT, "hero-space.gif"))
+    space[0].save(os.path.join(OUT, "hero-space-still.png"))
+    # One-off banner with a script line baked in, e.g. the Oct 6 reply to Dylan.
+    if len(sys.argv) > 1:
+        hero = build_hero(sys.argv[1])
+        write_gif(hero, os.path.join(OUT, "hero.gif"))
+        hero[0].save(os.path.join(OUT, "hero-still.png"))
     write_gif(build_divider(), os.path.join(OUT, "divider.gif"))
     build_signature().save(os.path.join(OUT, "sig.png"), optimize=True)
-    for n in ("hero.gif", "divider.gif", "sig.png"):
+    for n in ("hero-space.gif", "divider.gif", "sig.png"):
         print(n, os.path.getsize(os.path.join(OUT, n)) // 1024, "KB")
 
 
