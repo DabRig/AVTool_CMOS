@@ -121,3 +121,27 @@ parsing. Real transcription quality and speed can only be judged on the Mac.
 - **Guided tour** (10 steps, spotlight, remembered once seen) and a searchable
   **Help Center** (15 sections, including editor guides, FAQ, troubleshooting and
   shortcuts), plus keyboard shortcuts.
+
+## 9. V2.0: AV Transcriber, glass, bigger type, Windows
+
+- **Name:** "AV Transcriber" everywhere (title, window, Mac app, Windows
+  shortcuts, Help). Same logo. The old `AVTool.app` is removed when the Mac app
+  is rebuilt.
+- **Type:** every size is in `rem` and follows one TEXT SIZE setting
+  (S 100% / M 120%, the default / L 135% / XL 150%; also Cmd/Ctrl +, -, 0). Dim text
+  was raised to at least 4.8:1 contrast. Layout checked at 1440×900, 1280×760 and
+  1100×700 with every text size (no overflow, START always visible); panels adapt
+  with container queries.
+- **Glass:** an "in between" nebula behind blurred, tinted glass panels with a lit
+  rim and a soft shadow; the Help Center is a native `<dialog>`.
+- **Bug fixed:** in V1.2 the Help pop-up's `.help` style also matched the Glossary
+  tab's hint paragraphs and covered the editor (reproduced, fixed, regression test added).
+- **Windows:** `setup_windows.bat` (winget ffmpeg + Python 3.12, NVIDIA CUDA engine
+  auto-detected, model download, Desktop/Start-menu shortcuts with the icon),
+  `update_windows.bat`; no console windows flash up; ffmpeg found where winget puts
+  it; cuBLAS/cuDNN DLL folders added; long (>260 character) paths handled; output
+  goes to a log when started from a shortcut; File Explorer / Ctrl / PC wording;
+  Windows help. Verified here: every Windows package exists as a 64-bit Python 3.12
+  wheel (ctranslate2 4.8.5, cuBLAS 12.9, cuDNN 9.28, pythonnet 3.2.1; proxy_tools is
+  pure-Python source). ⏳ **Not yet run on real Windows**: the setup script, the
+  native window, CUDA speed and drag-and-drop need a first run on your PCs.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AVTool CMOS — free, offline transcripts and subtitles for video and audio.
+"""AV Transcriber — free, offline transcripts and subtitles for video and audio.
 
     python transcribe.py "/Volumes/LaCie/Shoot"            # a whole folder
     python transcribe.py "/Volumes/LaCie/Shoot/IMG_0042.MOV"  # one file

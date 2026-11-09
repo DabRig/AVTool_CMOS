@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
@@ -41,18 +42,32 @@ def output_path(out_dir: Path, source: Path, fmt: str) -> Path:
 
 
 def done_marker(out_dir: Path, source: Path) -> Path:
-    return output_path(out_dir, source, "json")
+    return long_path(output_path(out_dir, source, "json"))
 
 
 def remove_partials(out_dir: Path, source: Path) -> None:
     for fmt in FORMATS:
-        final = output_path(out_dir, source, fmt)
+        final = long_path(output_path(out_dir, source, fmt))
         partial = final.with_name(final.name + PARTIAL)
         if partial.exists():
             partial.unlink()
 
 
+def long_path(path: Path) -> Path:
+    """Windows refuses paths over 260 characters unless they carry the \\\\?\\
+    prefix. Deep folders + 'name.MOV.timestamped.txt.partial' can get there."""
+    if sys.platform != "win32":
+        return path
+    text = str(Path(path).resolve())
+    if len(text) < 240 or text.startswith("\\\\?\\"):
+        return Path(text)
+    if text.startswith("\\\\"):  # network share: \\server\share -> \\?\UNC\server\share
+        return Path("\\\\?\\UNC\\" + text[2:])
+    return Path("\\\\?\\" + text)
+
+
 def _atomic(path: Path, write: Callable[[Path], None]) -> None:
+    path = long_path(path)
     tmp = path.with_name(path.name + PARTIAL)
     try:
         write(tmp)
@@ -180,7 +195,7 @@ def write_all(
 
     # Last: the JSON. Its existence means "this file is completely done".
     data = {
-        "tool": f"AVTool CMOS {__version__}",
+        "tool": f"AV Transcriber {__version__}",
         "created": datetime.now().isoformat(timespec="seconds"),
         "source": {
             "name": source.name,

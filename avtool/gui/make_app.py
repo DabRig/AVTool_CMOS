@@ -1,8 +1,8 @@
-"""Build AVTool.app — a double-clickable Mac app for the AVTool window.
+"""Build "AV Transcriber.app" — a double-clickable Mac app for the app window.
 
     .venv/bin/python -m avtool.gui.make_app
 
-Creates AVTool.app in the project folder (drag it to the Dock). The app is a
+Creates "AV Transcriber.app" in the project folder (drag it to the Dock). The app is a
 small launcher that runs this project's private Python (.venv), so it must be
 rebuilt if the project folder moves: run setup_mac.command again.
 
@@ -19,19 +19,20 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .. import __version__
+from .. import APP_NAME, __version__
 from ..cli import PROJECT_DIR
 
-APP_NAME = "AVTool"
+OLD_APP_NAMES = ("AVTool",)  # earlier versions' app name: removed when rebuilding
+EXECUTABLE = "AVTranscriber"
 BUNDLE_ID = "com.sebastiansuccess.avtool"
 ICON_PNG = Path(__file__).resolve().parent / "static" / "img" / "icon-1024.png"
 
 LAUNCHER = """#!/bin/bash
-# AVTool launcher — opens the AVTool window using this project's Python.
+# AV Transcriber launcher — opens the app window using this project's Python.
 PROJECT={project}
-LOG="$HOME/Library/Logs/AVTool.log"
+LOG="$HOME/Library/Logs/AV Transcriber.log"
 if [[ ! -x "$PROJECT/.venv/bin/python" ]]; then
-  /usr/bin/osascript -e 'display alert "AVTool needs setup" message "Open Terminal in the AVTool folder and run:  bash setup_mac.command" as critical'
+  /usr/bin/osascript -e 'display alert "AV Transcriber needs setup" message "Open Terminal in the AV Transcriber folder and run:  bash setup_mac.command" as critical'
   exit 1
 fi
 cd "$PROJECT" || exit 1
@@ -63,6 +64,9 @@ def make_icns(png: Path, out: Path) -> bool:
 
 
 def build(dest_dir: Path = PROJECT_DIR) -> Path:
+    for old in OLD_APP_NAMES:
+        if (dest_dir / f"{old}.app").exists():
+            shutil.rmtree(dest_dir / f"{old}.app")
     app = dest_dir / f"{APP_NAME}.app"
     if app.exists():
         shutil.rmtree(app)
@@ -71,7 +75,7 @@ def build(dest_dir: Path = PROJECT_DIR) -> Path:
     macos.mkdir(parents=True)
     resources.mkdir(parents=True)
 
-    launcher = macos / APP_NAME
+    launcher = macos / EXECUTABLE
     launcher.write_text(LAUNCHER.format(project=_shell_quote(str(PROJECT_DIR))))
     launcher.chmod(0o755)
 
@@ -80,14 +84,14 @@ def build(dest_dir: Path = PROJECT_DIR) -> Path:
         "CFBundleName": APP_NAME,
         "CFBundleDisplayName": APP_NAME,
         "CFBundleIdentifier": BUNDLE_ID,
-        "CFBundleExecutable": APP_NAME,
+        "CFBundleExecutable": EXECUTABLE,
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": "1.0",
         "CFBundleVersion": __version__,
         "LSMinimumSystemVersion": "11.0",
         "LSApplicationCategoryType": "public.app-category.video",
         "NSHighResolutionCapable": True,
-        "NSHumanReadableCopyright": "Sebastian Success · personal offline tool",
+        "NSHumanReadableCopyright": "Personal offline tool",
     }
     if has_icon:
         info["CFBundleIconFile"] = "AppIcon"
@@ -99,10 +103,10 @@ def build(dest_dir: Path = PROJECT_DIR) -> Path:
 
 def main() -> int:
     if sys.platform != "darwin":
-        print("AVTool.app is a Mac app; on this computer run:  python -m avtool.gui")
+        print(f"{APP_NAME}.app is a Mac app; on this computer run:  python -m avtool.gui")
     app = build()
     print(f"✓ Built {app}")
-    print("  Double-click it to open AVTool. Drag it to the Dock to keep it handy.")
+    print(f"  Double-click it to open {APP_NAME}. Drag it to the Dock to keep it handy.")
     return 0
 
 

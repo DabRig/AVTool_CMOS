@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -82,13 +83,36 @@ def scan(path: Path, recursive: bool = False) -> list[Path]:
 
 HOMEBREW_DIRS = ("/opt/homebrew/bin", "/usr/local/bin")
 
+# On Windows, run ffmpeg/ffprobe without flashing a black console window.
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+
+def windows_tool_dirs() -> list[str]:
+    """Where Windows installers put ffmpeg: winget's shortcut folder, winget's
+    package folder (Gyan.FFmpeg), and the usual hand-install spots."""
+    local = os.environ.get("LOCALAPPDATA", "")
+    dirs = []
+    if local:
+        dirs.append(os.path.join(local, "Microsoft", "WinGet", "Links"))
+        packages = Path(local) / "Microsoft" / "WinGet" / "Packages"
+        if packages.is_dir():
+            dirs += [str(p) for p in sorted(packages.glob("Gyan.FFmpeg*/*/bin"))]
+    for base in (os.environ.get("ProgramFiles", r"C:\Program Files"), "C:\\"):
+        dirs.append(os.path.join(base, "ffmpeg", "bin"))
+    return dirs
+
+
+def tool_dirs() -> list[str]:
+    return windows_tool_dirs() if sys.platform == "win32" else list(HOMEBREW_DIRS)
+
 
 def ensure_tool_path() -> None:
-    """Apps opened from Finder get a short PATH without Homebrew's folder, so a
-    library that runs `ffmpeg` by name can't find it. Add Homebrew's folders
-    (only those that exist) to the front of PATH for this process."""
+    """Apps opened from Finder (or a Windows shortcut opened right after
+    installing ffmpeg) can get a PATH without ffmpeg's folder, so a library that
+    runs `ffmpeg` by name can't find it. Add the usual folders (only those that
+    exist) to the front of PATH for this process."""
     parts = [p for p in os.environ.get("PATH", "").split(os.pathsep) if p]
-    for folder in reversed(HOMEBREW_DIRS):
+    for folder in reversed(tool_dirs()):
         if os.path.isdir(folder) and folder not in parts:
             parts.insert(0, folder)
     os.environ["PATH"] = os.pathsep.join(parts)
@@ -101,9 +125,10 @@ def find_tool(name: str) -> Optional[str]:
     found = shutil.which(name)
     if found:
         return found
-    # Homebrew locations, in case the PATH wasn't updated in this Terminal yet.
-    for prefix in HOMEBREW_DIRS:
-        candidate = Path(prefix) / name
+    # Homebrew / winget locations, in case PATH wasn't updated in this window yet.
+    exe = name + (".exe" if sys.platform == "win32" else "")
+    for prefix in tool_dirs():
+        candidate = Path(prefix) / exe
         if candidate.exists():
             return str(candidate)
     return None
@@ -172,7 +197,7 @@ def probe(path: Path) -> ProbeResult:
     try:
         proc = subprocess.run(
             args, capture_output=True, text=True, encoding="utf-8",
-            errors="replace", timeout=PROBE_TIMEOUT,
+            errors="replace", timeout=PROBE_TIMEOUT, creationflags=NO_WINDOW,
         )
     except subprocess.TimeoutExpired:
         raise MediaError("ffprobe timed out reading the file (drive asleep or file damaged?)")
@@ -277,7 +302,7 @@ def extract_audio(
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as err:
         proc = subprocess.Popen(
             args, stdout=subprocess.PIPE, stderr=err, stdin=subprocess.DEVNULL,
-            text=True, encoding="utf-8", errors="replace",
+            text=True, encoding="utf-8", errors="replace", creationflags=NO_WINDOW,
         )
         try:
             assert proc.stdout is not None

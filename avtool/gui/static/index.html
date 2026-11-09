@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AVTool — Sebastian Success</title>
+<title>AV Transcriber</title>
 <link rel="icon" href="img/ss-mark-512.png">
 <link rel="stylesheet" href="app.css">
 </head>
@@ -15,12 +15,12 @@
   <!-- ============ HEADER ============ -->
   <header class="head">
     <div class="brand">
-      <div class="logo" role="img" aria-label="Sebastian Success logo">
+      <div class="logo" role="img" aria-label="AV Transcriber logo">
         <span class="orbit"><b class="ox"><b class="oy"><i></i></b></b></span><span class="mark"></span>
       </div>
       <div class="brand-text">
-        <h1 class="chrome-text">SEBASTIAN SUCCESS</h1>
-        <div class="sub hud">AV TRANSCRIBER <span class="sep">✦</span> V<span id="ver">1.2</span> <span class="sep">✦</span> OFFLINE SPEECH-TO-TEXT</div>
+        <h1 class="chrome-text">AV TRANSCRIBER</h1>
+        <div class="sub hud">OFFLINE SPEECH-TO-TEXT <span class="sep">✦</span> V<span id="ver">2.0</span></div>
       </div>
     </div>
     <div class="readouts">
@@ -44,7 +44,7 @@
     <!-- Queue rack -->
     <section class="rack panel" aria-label="Queue">
       <div class="panel-title">
-        <span class="hud">QUEUE RACK</span>
+        <span class="hud">QUEUE RACK<span class="folder-chip" id="queue-folder"></span></span>
         <span class="hud dim" id="queue-meta">0 FILES</span>
       </div>
       <div class="toolbar">
@@ -84,6 +84,12 @@
 
       <!-- SETTINGS -->
       <div class="tabpane active" id="tab-settings" role="tabpanel">
+        <div class="ctl always">
+          <div class="hud lbl">TEXT SIZE <span class="dim">· ⌘+ / ⌘− / ⌘0</span></div>
+          <div class="seg" data-setting="text_scale" aria-label="Text size">
+            <button data-value="1" title="Small (100%)">S</button><button data-value="1.2" title="Medium (120%), the default">M</button><button data-value="1.35" title="Large (135%)">L</button><button data-value="1.5" title="Extra large (150%)">XL</button>
+          </div>
+        </div>
         <div class="knob-row">
           <div class="knob-wrap">
             <div class="knob" id="knob-model" tabindex="0" role="slider" aria-label="Quality"
@@ -159,7 +165,7 @@
             <button data-fmt="json" class="locked" title="Always written: marks a file as finished" disabled>JSON</button>
           </div>
         </div>
-        <p class="lock-note hud" id="lock-note" hidden>SETTINGS LOCKED WHILE RUNNING</p>
+        <p class="lock-note hud" id="lock-note" hidden>SETTINGS LOCKED WHILE RUNNING (TEXT SIZE STILL WORKS)</p>
       </div>
 
       <!-- GLOSSARY -->
@@ -241,10 +247,10 @@
 </div>
 
 <!-- ============ HELP CENTER ============ -->
-<div class="help" id="help" hidden role="dialog" aria-modal="true" aria-label="Help Center">
+<dialog class="help-dialog" id="help" closedby="any" aria-label="Help Center">
   <div class="help-panel">
     <aside class="help-nav">
-      <div class="help-brand"><span class="mark"></span><div><b>HELP CENTER</b><small class="hud dim">AVTOOL MANUAL</small></div></div>
+      <div class="help-brand"><span class="mark"></span><div><b>HELP CENTER</b><small class="hud dim">USER MANUAL</small></div></div>
       <input class="field" id="help-search" type="search" placeholder="Search help…" aria-label="Search help">
       <nav id="help-links"></nav>
       <button class="btn primary" id="btn-replay-tour">▶ TAKE THE TOUR</button>
@@ -272,7 +278,7 @@
           <div class="map-foot">TRANSPORT: START · STOP · meter · progress · time left · counters</div>
         </div>
         <dl class="defs">
-          <dt>ENGINE light</dt><dd>Which transcriber runs your files. On your M2 Pro it says <b>MLX · APPLE GPU</b> (the fast one). Red means something isn't installed; see Troubleshooting.</dd>
+          <dt>ENGINE light</dt><dd>Which transcriber runs your files. <span data-os="mac">On your M2 Pro it says <b>MLX · APPLE GPU</b> (the fast one).</span><span data-os="win">On your NVIDIA PCs it says <b>CUDA · NVIDIA GPU</b> (the fast one). <b>CPU</b> means the graphics card isn't being used; see Troubleshooting.</span> Red means something isn't installed; see Troubleshooting.</dd>
           <dt>MODEL light</dt><dd>The speech model in use. Blue = downloaded and works offline. Amber = it downloads once (internet needed) the first time you press START.</dd>
           <dt>NETWORK · LOCAL ONLY</dt><dd>A reminder that nothing is ever uploaded.</dd>
         </dl>
@@ -358,7 +364,7 @@
 
       <section data-title="Log">
         <h2>Log</h2>
-        <p>A running commentary: what was found, each file's result and speed, and the summary. Green = done, amber = skipped/stopped, red = failed. The same information is saved as <code>log.txt</code> next to your transcripts, and the app's own diagnostics go to <code>~/Library/Logs/AVTool.log</code>.</p>
+        <p>A running commentary: what was found, each file's result and speed, and the summary. Green = done, amber = skipped/stopped, red = failed. The same information is saved as <code>log.txt</code> next to your transcripts, and the app's own diagnostics go to <code data-os="mac">~/Library/Logs/AV Transcriber.log</code><code data-os="win">%LOCALAPPDATA%\AV Transcriber\app.log</code>.</p>
       </section>
 
       <section data-title="Your files">
@@ -423,16 +429,18 @@
         <details><summary>My camera recorded two audio tracks. Which is used?</summary><p>The first one that can be decoded. To choose another, use the Terminal version with <code>--audio-track 2</code>, or set it per file in <code>config.toml</code>.</p></details>
         <details><summary>What do DRAFT / BALANCED / BEST download?</summary><p>Each quality level uses its own model (about 0.5–1.6 GB), downloaded once the first time you press START with it.</p></details>
         <details><summary>Which file types work?</summary><p>Video: .mov .mp4 .mkv .webm .wmv. Audio: .mp3 .wav .flac .aac .m4a. Upper-case names like .MOV are fine. Hidden files and macOS "._" files are ignored.</p></details>
-        <details><summary>How do I update AVTool?</summary><p>In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash update.command</code>. Your glossary, settings and transcripts are kept.</p></details>
+        <details><summary>How do I update AV Transcriber?</summary><p><span data-os="mac">In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash update.command</code>.</span><span data-os="win">Double-click <code>update_windows.bat</code> in the AV Transcriber folder.</span> Your glossary, settings and transcripts are kept.</p></details>
       </section>
 
       <section data-title="Troubleshooting">
         <h2>Troubleshooting</h2>
         <dl class="defs">
           <dt>Every file FAILED with "No such file or directory: 'ffmpeg'"</dt><dd>Fixed in V1.2. Run the update (see FAQ), then press START again.</dd>
-          <dt>ENGINE light is red</dt><dd>Something isn't installed. In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash setup_mac.command</code>.</dd>
+          <dt data-os="win">ENGINE says CPU instead of CUDA · NVIDIA GPU</dt><dd data-os="win">Update the NVIDIA driver (GeForce Experience or nvidia.com/drivers), restart, then run <code>setup_windows.bat</code> again. It still works on CPU, just slower; DRAFT or BALANCED quality helps.</dd>
+          <dt data-os="win">Windows says "Windows protected your PC"</dt><dd data-os="win">That's SmartScreen being careful with downloaded scripts. Click <b>More info › Run anyway</b>. To avoid it, right-click the ZIP › Properties › tick <b>Unblock</b> before extracting.</dd>
+          <dt>ENGINE light is red</dt><dd>Something isn't installed. <span data-os="mac">In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash setup_mac.command</code>.</span><span data-os="win">Double-click <code>setup_windows.bat</code> in the AV Transcriber folder.</span></dd>
           <dt>"Can't write to …"</dt><dd>The drive is read-only on this Mac (often NTFS-formatted). Choose SAVE TRANSCRIPTS › CUSTOM FOLDER.</dd>
-          <dt>macOS asks about "files on a removable volume"</dt><dd>Click <b>Allow</b> so AVTool can read your external drive. To change it later: System Settings › Privacy &amp; Security › Files and Folders.</dd>
+          <dt data-os="mac">macOS asks about "files on a removable volume"</dt><dd data-os="mac">Click <b>Allow</b> so AV Transcriber can read your external drive. To change it later: System Settings › Privacy &amp; Security › Files and Folders.</dd>
           <dt>A file shows NO AUDIO</dt><dd>That video has no sound track (screen recordings sometimes don't). Nothing to transcribe.</dd>
           <dt>Model download is stuck</dt><dd>Check the internet connection, then press START again; it continues the download.</dd>
           <dt>Text repeats, or lines appear over silence</dt><dd>The app filters most of these automatically. Note the file and time and let your developer know.</dd>
@@ -453,19 +461,43 @@
         </table>
       </section>
 
+      <section data-title="Install & update">
+        <h2>Install &amp; update</h2>
+        <div data-os="mac">
+          <h3>Mac</h3>
+          <ol class="steps small">
+            <li>In Terminal, inside the AV Transcriber folder: <code>bash setup_mac.command</code> (one time, about 15 minutes).</li>
+            <li>Double-click <b>AV Transcriber.app</b> and drag it to the Dock.</li>
+            <li>To update later: <code>bash update.command</code>.</li>
+          </ol>
+        </div>
+        <div data-os="win">
+          <h3>Windows 10 / 11</h3>
+          <ol class="steps small">
+            <li>Right-click the downloaded ZIP › Properties › tick <b>Unblock</b> › OK, then extract it to <b>Documents\AV Transcriber</b>.</li>
+            <li>Double-click <b>setup_windows.bat</b> (one time, about 15–20 minutes: it installs ffmpeg, Python, the NVIDIA engine and the speech model).</li>
+            <li>Open <b>AV Transcriber</b> from the Start menu or the desktop shortcut. Right-click its taskbar icon › <b>Pin to taskbar</b> to keep it handy.</li>
+            <li>To update later: double-click <b>update_windows.bat</b>.</li>
+          </ol>
+          <p class="note">On Windows, drag and drop works for files. For whole folders, use <kbd>＋ FOLDER</kbd>.</p>
+        </div>
+        <p>Both computers can use the same external drive: finished files are recognised on either, so nothing gets transcribed twice.</p>
+      </section>
+
       <section data-title="Privacy & updates">
         <h2>Privacy &amp; updates</h2>
         <ul class="tips">
           <li>All transcription happens on this Mac. No account, no upload, no usage tracking.</li>
           <li>The engine only listens to this Mac (127.0.0.1) and requires a secret key that changes every launch.</li>
-          <li>Update any time with <code>bash update.command</code>; it keeps your glossary, settings and transcripts.</li>
-          <li>AVTool is built on free, open-source parts: OpenAI Whisper, mlx-whisper, faster-whisper, FFmpeg, pywebview and the Inter typeface.</li>
+          <li>Update any time with <code data-os="mac">bash update.command</code><b data-os="win">update_windows.bat</b>; it keeps your glossary, settings and transcripts.</li>
+          <li>AV Transcriber is built on free, open-source parts: OpenAI Whisper, mlx-whisper, faster-whisper, FFmpeg, pywebview and the Inter typeface.</li>
         </ul>
       </section>
     </div>
   </div>
-</div>
+</dialog>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="platform.js"></script>
 <script src="stars.js"></script>
 <script src="app.js"></script>
 <script src="help.js"></script>

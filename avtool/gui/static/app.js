@@ -1,4 +1,4 @@
-/* AVTool — Sebastian Success · V1.0
+/* AV Transcriber · V2.0
    The page polls the local engine for state and sends button presses back.
    Everything goes to 127.0.0.1 (this Mac) with a per-launch secret key. */
 (() => {
@@ -38,7 +38,7 @@
   function toast(text, bad = false) {
     const el = document.createElement("div");
     el.className = "toast" + (bad ? " bad" : "");
-    el.textContent = text;
+    el.textContent = window.AVLocale ? window.AVLocale.t(text) : text;
     $("#toasts").appendChild(el);
     setTimeout(() => el.remove(), bad ? 6000 : 3200);
   }
@@ -144,6 +144,7 @@
             <button class="icon-btn" data-act="reveal" title="Show in Finder" aria-label="Show in Finder">⌕</button>
             <button class="icon-btn" data-act="remove" title="Remove from queue" aria-label="Remove">✕</button>
           </span>`;
+        if (window.AVLocale) window.AVLocale.localize(row);
         box.appendChild(row);
       }
       if (box.children[idx] !== row) box.insertBefore(row, box.children[idx]);
@@ -175,6 +176,11 @@
       row.querySelector('[data-act="remove"]').disabled = item.status === "running" || item.status === "queued";
     });
     $$(".row", box).forEach((row) => { if (!seen.has(row.dataset.id)) row.remove(); });
+    const folders = new Set(s.items.map((i) => i.folder));
+    const oneFolder = folders.size === 1;
+    box.classList.toggle("one-folder", oneFolder);
+    $("#queue-folder").textContent = oneFolder ? "\u200E" + [...folders][0] + "/\u200E" : "";
+    $("#queue-folder").title = oneFolder ? [...folders][0] : "";
     const audio = s.items.reduce((a, i) => a + (i.duration || 0), 0);
     $("#queue-meta").textContent = `${s.items.length} FILE${s.items.length === 1 ? "" : "S"} · ${human(audio)} AUDIO`;
   }
@@ -238,11 +244,20 @@
     $$("button", seg).forEach((b) => b.classList.toggle("on", b.dataset.value === value));
   }
 
+  function applyTextScale(scale) {
+    const value = String(scale || 1.2);
+    if (document.documentElement.style.getPropertyValue("--text-scale") !== value) {
+      document.documentElement.style.setProperty("--text-scale", value);
+      window.dispatchEvent(new Event("resize"));  // starfield and tour re-measure
+    }
+  }
+
   function renderSettings(s, prev) {
     const st = s.settings;
+    applyTextScale(st.text_scale);
     $(".side").classList.toggle("locked", s.running);
     $("#lock-note").hidden = !s.running;
-    $$(".seg[data-setting]").forEach((seg) => setSeg(seg, st[seg.dataset.setting]));
+    $$(".seg[data-setting]").forEach((seg) => setSeg(seg, String(st[seg.dataset.setting])));
     $$("input[data-setting]").forEach((cb) => { cb.checked = !!st[cb.dataset.setting]; });
     setKnob(Math.max(0, MODELS.indexOf(st.model)));
     setSeg($("#out-mode"), st.out ? "custom" : (outCustomPending ? "custom" : "next"));
@@ -307,7 +322,9 @@
   function bindSettings() {
     $$(".seg[data-setting]").forEach((seg) => seg.addEventListener("click", (e) => {
       const b = e.target.closest("button");
-      if (b) saveSetting({ [seg.dataset.setting]: b.dataset.value });
+      if (!b) return;
+      const key = seg.dataset.setting;
+      saveSetting({ [key]: key === "text_scale" ? Number(b.dataset.value) : b.dataset.value });
     }));
     $$("input[data-setting]").forEach((cb) => cb.addEventListener("change", () => saveSetting({ [cb.dataset.setting]: cb.checked })));
     $("#formats").addEventListener("click", (e) => {
@@ -413,7 +430,7 @@
       e.preventDefault();
       depth = 0;
       document.body.classList.remove("dragging");
-      if (!window.pywebview) toast("Drag-and-drop works in the AVTool app. Here, use ＋ FILES / ＋ FOLDER.", true);
+      if (!window.pywebview) toast("Drag-and-drop works in the AV Transcriber app. Here, use ＋ FILES / ＋ FOLDER.", true);
       setTimeout(poll, 400);
       setTimeout(poll, 1200);
     });
@@ -567,7 +584,7 @@
 
   // ------------------------------------------------------------- boot
   // Shared with help.js (tour, Help Center, shortcuts).
-  window.AVTool = { api, toast, getState: () => state, showTab };
+  window.AVTool = { api, toast, getState: () => state, showTab, saveSetting };
 
   function boot() {
     $$(".tab").forEach((t) => t.addEventListener("click", () => {

@@ -37,8 +37,9 @@ STATIC = Path(__file__).resolve().parent / "static"
 GUI_SETTINGS = PROJECT_DIR / "gui_settings.json"
 MODELS = ["small", "medium", "large-v3-turbo"]
 EDITABLE = ("model", "lang", "captions", "boost_quiet", "recursive", "force",
-            "keep_awake", "out", "formats", "tour_done")
-ALWAYS_EDITABLE = {"tour_done"}  # not a transcription setting: fine to change mid-batch
+            "keep_awake", "out", "formats", "tour_done", "text_scale")
+ALWAYS_EDITABLE = {"tour_done", "text_scale"}  # not transcription settings: fine mid-batch
+TEXT_SCALES = (1.0, 1.2, 1.35, 1.5)
 
 
 # ---------------------------------------------------------------- state
@@ -90,6 +91,7 @@ class AppState:
             "keep_awake": bool(self.config["keep_awake"]), "out": self.config["out"] or "",
             "formats": [f for f in self.config["formats"] if f in FORMATS],
             "tour_done": False,
+            "text_scale": 1.2,
         }
         try:
             saved = json.loads(GUI_SETTINGS.read_text())
@@ -114,6 +116,13 @@ class AppState:
                     value = [f for f in value if f in FORMATS]
                 if key == "tour_done":
                     value = bool(value)
+                if key == "text_scale":
+                    try:
+                        value = float(value)
+                    except (TypeError, ValueError):
+                        continue
+                    if value not in TEXT_SCALES:
+                        continue
                 self.settings[key] = value
             if "json" not in self.settings["formats"]:
                 self.settings["formats"].append("json")  # resume marker, always written
@@ -428,6 +437,7 @@ class AppState:
                 "log": [{"n": n, "text": t} for n, t in self.log if n > since],
                 "log_seq": self.log_seq,
                 "dialogs": self.dialogs is not None or sys.platform == "darwin",
+                "platform": "win" if sys.platform == "win32" else ("mac" if sys.platform == "darwin" else "other"),
             }
 
 
@@ -461,7 +471,7 @@ def reveal(path: str, open_file: bool = False) -> None:
         if open_file:
             os.startfile(path)  # noqa: S606 - local file the user asked to open
         else:
-            subprocess.Popen(["explorer", "/select,", path])
+            subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
     else:
         target = path if open_file else str(Path(path).parent)
         subprocess.Popen(["xdg-open", target])
@@ -473,7 +483,7 @@ class Handler(BaseHTTPRequestHandler):
     app: AppState
     token: str
     port: int
-    server_version = "AVTool"
+    server_version = "AVTranscriber"
 
     def log_message(self, fmt, *args):  # keep the Terminal quiet
         pass

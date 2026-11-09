@@ -1,5 +1,5 @@
 #!/bin/bash
-# AVTool CMOS — one-time setup for a Mac.
+# AV Transcriber — one-time setup for a Mac.
 # Run it by typing:  bash setup_mac.command   (or double-click it in Finder)
 # Safe to run again: it skips anything already installed.
 
@@ -15,7 +15,7 @@ fail() {
 }
 trap 'fail "Something went wrong (see the messages above). Re-running the setup usually fixes network hiccups."' ERR
 
-bold "AVTool CMOS setup — about 10–15 minutes, mostly downloading."
+bold "AV Transcriber setup — about 10–15 minutes, mostly downloading."
 echo "  Needs internet this one time. After this, transcription works fully offline."
 
 # --- Which kind of Mac? -------------------------------------------------------
@@ -78,14 +78,14 @@ bold "Step 4/5 · Downloading the Whisper model (one time, about 1.6 GB)"
 .venv/bin/python transcribe.py --download-model
 
 # --- 5. Check -----------------------------------------------------------------
-bold "Step 5/5 · Building the AVTool app, making test clips, checking everything"
-.venv/bin/python -m avtool.gui.make_app >/dev/null && ok "AVTool.app built (in this folder — drag it to your Dock)"
+bold "Step 5/5 · Building the AV Transcriber app, making test clips, checking everything"
+.venv/bin/python -m avtool.gui.make_app >/dev/null && ok "\"AV Transcriber.app\" built (in this folder — drag it to your Dock)"
 .venv/bin/python samples/make_samples.py >/dev/null && ok "Test clips made in samples/clips"
 chmod +x Transcribe.command setup_mac.command update.command 2>/dev/null || true
 trap - ERR
 .venv/bin/python transcribe.py --check || true
 
 bold "Setup complete!"
-echo "  Next: double-click AVTool.app in this folder (or see README.md)."
-open -R "AVTool.app" 2>/dev/null || true
+echo "  Next: double-click \"AV Transcriber.app\" in this folder (or see README.md)."
+open -R "AV Transcriber.app" 2>/dev/null || true
 read -r -p "Press Enter to close." _ || true

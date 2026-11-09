@@ -1,7 +1,7 @@
-# AVTool CMOS — free, offline transcripts & subtitles
+# AV Transcriber — free, offline transcripts & subtitles
 
 Turn video and audio files into accurate, timestamped transcripts and subtitles,
-**on your own computer**. No uploads, no credits, no file-size limits.
+**on your own computer** (Mac or Windows). No uploads, no credits, no file-size limits.
 
 - **Reads:** `.mov .mp4 .mkv .webm .wmv` video and `.mp3 .wav .flac .aac .m4a` audio
   (upper-case `.MOV` from cameras/iPhones too).
@@ -13,51 +13,77 @@ Turn video and audio files into accurate, timestamped transcripts and subtitles,
 
 ---
 
-## The AVTool app (V1.2)
+## The AV Transcriber app (V2.0)
 
-**AVTool.app** is a window you double-click, styled like an audio plugin floating in
-space: your logo, a slowly drifting starfield, and glass panels. It does everything
-the Terminal commands below do, without typing. (If your Mac has *Reduce motion*
-switched on in Accessibility settings, the stars hold still.)
+A window styled like an audio plugin floating in space: your logo, a drifting
+starfield behind frosted-glass panels. It does everything the Terminal commands
+below do, without typing. (With *Reduce motion* on in your accessibility
+settings, the stars hold still.)
 
-- **Open it:** double-click **AVTool.app** in the AVTool folder. Drag it to your
-  Dock to keep it handy. The first time, macOS may ask to let AVTool use files on
-  your external drive. Click **Allow**.
-- **Queue rack (left):** drag videos or whole folders from Finder onto the window,
-  or use **＋ FILES / ＋ FOLDER**. Each row shows its length, a progress bar and
-  its status: READY, TRANSCRIBE 42%, DONE, NO AUDIO, FAILED. Hover over a
-  status to see why. The row buttons view the transcript, show the file in
-  Finder, or remove it from the queue.
+- **Open it:** Mac: double-click **AV Transcriber.app** in the project folder
+  and drag it to the Dock. Windows: the **AV Transcriber** shortcut on the
+  Desktop or in the Start menu. The first time on a Mac, macOS may ask to let it
+  use files on your external drive; click **Allow**.
+- **Queue rack (left):** drag videos or whole folders from Finder / File Explorer
+  onto the window (on Windows, use **＋ FOLDER** for folders), or use
+  **＋ FILES / ＋ FOLDER**. Each row shows its length, a progress bar and its
+  status: READY, TRANSCRIBE 42%, DONE, NO AUDIO, FAILED. Hover over a status to
+  see why. When all files come from one folder, the folder is shown once at the top.
 - **START / STOP (bottom):** the meter, the stage lights (EXTRACT › TRANSCRIBE ›
   WRITE), the percentage and the time left update live. STOP finishes cleanly:
   no temp files, no half-written transcripts. START picks up where it stopped.
 - **SETTINGS tab:**
+  - **TEXT SIZE** S / M / L / XL (M = +20% is the default). Also ⌘+ / ⌘− / ⌘0
+    (Ctrl on Windows). It works even while a batch runs.
   - The **QUALITY knob** (Draft / Balanced / Best): click it, drag it up or down,
     or click a label.
   - **Language** and **caption style** (Standard for Premiere/CapCut, Reels for
     vertical video).
   - Switches: **Boost quiet voices**, **Include subfolders**, **Redo finished
-    files**, **Keep Mac awake**.
+    files**, **Keep Mac/PC awake**.
   - Where transcripts are saved, and which files to make.
-  - Settings lock while a batch runs.
-- **GLOSSARY tab:** edit the names list (Evan, Smooth Scaling, Lightning OS…) and
-  click **SAVE GLOSSARY**.
-- **VIEWER tab:** read any finished transcript with timestamps. You can search
-  it, click a line to copy it, or open the TXT / SRT / DOCX.
-- **LOG tab:** the same running commentary the Terminal version prints.
-- **? HELP (top right):** the built-in manual: every control explained, guides
-  for Premiere, CapCut, DaVinci, Final Cut and Word, tips, an FAQ, troubleshooting
-  and keyboard shortcuts, all searchable. A one-minute **guided tour** runs the first
-  time you open the app, and you can replay it from the Help Center.
-- **Shortcuts:** ⌘O add files · ⌘⇧O add a folder · ⌘↩ START · ⌘. STOP · ? help.
+- **GLOSSARY tab:** edit the names list (Evan, Smooth Scaling, Lightning OS…).
+- **VIEWER tab:** read any finished transcript with timestamps, search it, click
+  a line to copy it, or open the TXT / SRT / DOCX.
+- **LOG tab:** the running commentary.
+- **? HELP (top right):** the searchable built-in manual, with Mac or Windows
+  instructions as appropriate. A one-minute **guided tour** runs the first time.
+- **Shortcuts:** ⌘O add files · ⌘⇧O add a folder · ⌘↩ START · ⌘. STOP · ? help
+  (Ctrl instead of ⌘ on Windows).
 
-**Updating later:** open Terminal and run
-`cd ~/Documents/AVTool && bash update.command`. It downloads the newest version
-and keeps your glossary, settings and transcripts.
+**Updating later:** Mac: `cd ~/Documents/AVTool && bash update.command`.
+Windows: double-click **update_windows.bat**. Both keep your glossary, settings
+and transcripts.
 
 ---
 
-## Step 1 — Install (one time, about 15 minutes)
+## Windows (10 / 11, 64-bit)
+
+1. **Download** the ZIP (the link is at the top of the project's GitHub page,
+   branch `claude/optimistic-thompson-as38s7`).
+2. **Unblock it** so Windows doesn't warn about every script: right-click the ZIP ›
+   **Properties** › tick **Unblock** › **OK**.
+3. **Extract** it and rename the folder to **AV Transcriber**, inside **Documents**.
+4. **Double-click `setup_windows.bat`.** About 15–20 minutes. It installs ffmpeg
+   and Python 3.12 with winget (Windows' own installer), detects your **NVIDIA**
+   card and installs the fast CUDA engine (about 1.5 GB of NVIDIA libraries),
+   downloads the speech model once (about 1.6 GB), and adds **AV Transcriber**
+   shortcuts to the Desktop and Start menu. If Windows shows *"Windows protected
+   your PC"*, click **More info › Run anyway**.
+5. **Open AV Transcriber** from the Start menu, then right-click its taskbar icon ›
+   **Pin to taskbar**.
+
+The header's ENGINE light should say **CUDA · NVIDIA GPU**. If it says **CPU**,
+update the NVIDIA driver (version 528 or newer), restart, and run
+`setup_windows.bat` again. App diagnostics are in `%LOCALAPPDATA%\AV Transcriber\app.log`.
+
+Mac and Windows can share the same external drive: finished files are recognised
+on either, so nothing gets transcribed twice. (A Mac can only *read* NTFS drives,
+so for a shared drive use exFAT, or choose a custom output folder on the Mac.)
+
+---
+
+## Mac: Step 1 — Install (one time, about 15 minutes)
 
 You need internet for this step only.
 
@@ -76,7 +102,7 @@ You need internet for this step only.
    It installs, in order: Homebrew (the Mac's installer for tools like this),
    **ffmpeg** (reads video files), **Python 3.12**, the **MLX Whisper** engine
    (runs on your M2 Pro's GPU), the **Whisper large-v3-turbo** model (≈1.6 GB), and
-   builds **AVTool.app**.
+   builds **AV Transcriber.app**.
    If it asks for your Mac password, type it and press Enter. Nothing appears
    while you type, and that's normal.
 
@@ -247,7 +273,8 @@ Wi-Fi and it still works.
 ```
 transcribe.py          entry point (python transcribe.py --help)
 avtool/gui/            the app: server.py (local API), app.py (window), make_app.py
-                       (builds AVTool.app), static/ (HTML/CSS/JS, logo, fonts)
+                       (builds the Mac app), static/ (HTML/CSS/JS, logo, fonts,
+                       platform.js for Mac/Windows wording)
 avtool/cli.py          options, config.toml, --check / --list-tracks / --download-model
 avtool/batch.py        the batch loop: probe, disk check, keep-awake, resume, log, summary
 avtool/media.py        scan, ffprobe, ffmpeg audio extraction (argument lists, streamed)

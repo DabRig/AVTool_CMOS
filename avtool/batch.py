@@ -296,7 +296,7 @@ def _run(settings: Settings) -> int:
         say(f"✗ {exc}")
         return 2
 
-    say(f"\nAVTool CMOS {__version__} — offline transcription")
+    say(f"\nAV Transcriber {__version__} — offline transcription")
     say(f"Input:    {settings.path}")
     say(f"Outputs:  {settings.out or 'next to each file'}")
     if not jobs:
@@ -311,7 +311,7 @@ def _run(settings: Settings) -> int:
                 break
     if write_problem:
         say(f"✗ {write_problem}")
-        say("  If the files are on a drive the Mac can only read (e.g. NTFS-formatted),")
+        say("  If the files are on a drive this computer can only read (a Mac reads NTFS drives only),")
         say('  send the transcripts elsewhere:  --out "~/Documents/Transcripts"')
         return 2
     log = Log(log_dir / "log.txt") if not settings.dry_run else None
@@ -404,7 +404,7 @@ def _run(settings: Settings) -> int:
             say("Loading the model (the first time can take a minute)...")
             emit("loading", label=backend.label())
             backend.load()
-            logline(f"RUN START | AVTool {__version__} | {backend.label()} | lang={settings.lang} | "
+            logline(f"RUN START | AV Transcriber {__version__} | {backend.label()} | lang={settings.lang} | "
                     f"{len(pending)} file(s), {human_duration(total_audio)}")
 
             audio_done = 0.0

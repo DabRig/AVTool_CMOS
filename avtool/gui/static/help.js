@@ -1,4 +1,4 @@
-/* AVTool — guided tour, Help Center and keyboard shortcuts. */
+/* AV Transcriber — guided tour, Help Center and keyboard shortcuts. */
 (() => {
   "use strict";
   const $ = (s, el = document) => el.querySelector(s);
@@ -8,7 +8,7 @@
   // ------------------------------------------------------------- tour
   const STEPS = [
     { target: null, title: "Welcome aboard, Sebastian",
-      text: "AVTool turns your videos into <b>transcripts and subtitles</b>, right here on your Mac. Nothing is uploaded. This one-minute tour shows you around." },
+      text: "AV Transcriber turns your videos into <b>transcripts and subtitles</b>, right here on your Mac. Nothing is uploaded. This one-minute tour shows you around." },
     { target: ".toolbar", title: "Add your videos",
       text: "Click <b>＋ FILES</b> or <b>＋ FOLDER</b>, paste a path, or simply <b>drag videos and folders from Finder</b> onto the window." },
     { target: ".rack", title: "The queue rack",
@@ -55,8 +55,9 @@
     const welcome = !s.target;
     card.classList.toggle("welcome", welcome);
     $("#tour-step").textContent = welcome ? "QUICK TOUR · 1 MINUTE" : `STEP ${step} / ${STEPS.length - 1}`;
-    $("#tour-title").textContent = s.title;
-    $("#tour-text").innerHTML = (welcome ? '<span class="mark tour-logo"></span>' : "") + s.text;
+    const t = window.AVLocale ? window.AVLocale.t : (x) => x;
+    $("#tour-title").textContent = t(s.title);
+    $("#tour-text").innerHTML = (welcome ? '<span class="mark tour-logo"></span>' : "") + t(s.text);
     $$("#tour-dots i").forEach((d, i) => d.classList.toggle("on", i === step));
     $("#tour-back").disabled = step === 0;
     $("#tour-next").textContent = step === STEPS.length - 1 ? "LET'S GO" : (welcome ? "SHOW ME" : "NEXT");
@@ -106,13 +107,14 @@
   // ------------------------------------------------------------- help center
   function openHelp(sectionTitle) {
     if (touring) return;
-    $("#help").hidden = false;
+    const dlg = $("#help");
+    if (!dlg.open) dlg.showModal();
     $("#help-search").value = "";
     filterHelp("");
     if (sectionTitle) goTo(sectionTitle);
     $("#help-search").focus();
   }
-  function closeHelp() { $("#help").hidden = true; }
+  function closeHelp() { const dlg = $("#help"); if (dlg.open) dlg.close(); }
 
   function buildNav() {
     const nav = $("#help-links");
@@ -176,11 +178,19 @@
       else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
       return;
     }
-    if (!$("#help").hidden) {
-      if (e.key === "Escape") { e.preventDefault(); closeHelp(); }
+    if ($("#help").open) return;  // the native dialog handles Esc itself
+    const cmd = e.metaKey || e.ctrlKey;
+    if (cmd && ["=", "+", "-", "_", "0"].includes(e.key)) {
+      e.preventDefault();
+      const steps = [1, 1.2, 1.35, 1.5];
+      const a = app();
+      const now = Number((a && a.getState() && a.getState().settings.text_scale) || 1.2);
+      let i = steps.indexOf(now);
+      if (i < 0) i = 1;
+      const next = e.key === "0" ? 1.2 : steps[Math.max(0, Math.min(3, i + (e.key === "-" || e.key === "_" ? -1 : 1)))];
+      if (a && next !== now) a.saveSetting({ text_scale: next });
       return;
     }
-    const cmd = e.metaKey || e.ctrlKey;
     if (cmd && e.key.toLowerCase() === "o") { e.preventDefault(); $(e.shiftKey ? "#btn-add-folder" : "#btn-add-files").click(); }
     else if (cmd && e.key === "Enter") { e.preventDefault(); if (!$("#btn-start").disabled) $("#btn-start").click(); }
     else if (cmd && e.key === ".") { e.preventDefault(); if (!$("#btn-stop").disabled) $("#btn-stop").click(); }
@@ -190,7 +200,11 @@
   // ------------------------------------------------------------- wiring
   $("#btn-help").addEventListener("click", () => openHelp());
   $("#help-close").addEventListener("click", closeHelp);
-  $("#help").addEventListener("click", (e) => { if (e.target.id === "help") closeHelp(); });
+  $("#help").addEventListener("click", (e) => {
+    const r = $(".help-panel").getBoundingClientRect();
+    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    if (!inside) closeHelp();
+  });
   $("#help-search").addEventListener("input", (e) => filterHelp(e.target.value));
   $("#help-body").addEventListener("scroll", onScroll);
   $("#btn-replay-tour").addEventListener("click", () => { closeHelp(); startTour(); });

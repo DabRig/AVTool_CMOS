@@ -81,7 +81,7 @@ def test_locked_down(app):
         urllib.request.urlopen(app["base"] + "/../../cli.py", timeout=5)
     assert e.value.code in (403, 404)
     page = urllib.request.urlopen(app["base"] + "/", timeout=5)
-    assert "SEBASTIAN SUCCESS" in page.read().decode()
+    assert "AV TRANSCRIBER" in page.read().decode()
     assert "default-src 'self'" in page.headers["Content-Security-Policy"]
 
 
@@ -171,3 +171,26 @@ def test_tour_flag_allowed_while_running(app, monkeypatch):
     assert call(app, "/api/settings", {"tour_done": True})["tour_done"] is True  # not locked
     call(app, "/api/stop", {})
     wait_until(app, lambda s: not s["running"])
+
+
+def test_text_size_setting(app):
+    s = call(app, "/api/state")["settings"]
+    assert s["text_scale"] == 1.2  # +20% by default
+    assert call(app, "/api/settings", {"text_scale": 1.5})["text_scale"] == 1.5
+    assert call(app, "/api/settings", {"text_scale": 9})["text_scale"] == 1.5  # only S/M/L/XL
+    assert call(app, "/api/settings", {"text_scale": "nope"})["text_scale"] == 1.5
+
+
+def test_no_style_name_clashes():
+    """V1.2 bug: the Help pop-up's `.help` style also matched the Glossary tab's
+    hint paragraphs and turned them into full-screen overlays."""
+    import re
+    css = (ROOT / "avtool" / "gui" / "static" / "app.css").read_text()
+    for rule in re.findall(r"(?m)^\.help\s*\{[^}]*\}", css):
+        assert "position: fixed" not in rule, rule
+
+
+def test_page_is_platform_aware():
+    html = (ROOT / "avtool" / "gui" / "static" / "index.html").read_text()
+    assert 'src="platform.js"' in html and html.index("platform.js") < html.index("app.js")
+    assert 'data-os="win"' in html and 'data-os="mac"' in html

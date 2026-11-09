@@ -1,4 +1,4 @@
-/* AVTool — living starfield behind the whole app.
+/* AV Transcriber — living starfield behind the whole app.
    Three depths of stars drifting slowly, gentle twinkle, a rare shooting star.
    Light on the computer: ~30 frames a second, pauses when the window is hidden,
    and stays still if the Mac's "Reduce motion" setting is on. */

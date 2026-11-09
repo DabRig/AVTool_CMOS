@@ -102,7 +102,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="download the model now (needs internet once), then stop")
     p.add_argument("--config", metavar="FILE", help=f"settings file (default: {DEFAULT_CONFIG.name})")
     p.add_argument("--temp-dir", metavar="FOLDER", help=argparse.SUPPRESS)
-    p.add_argument("--version", action="version", version=f"AVTool CMOS {__version__}")
+    p.add_argument("--version", action="version", version=f"AV Transcriber {__version__}")
     return p
 
 
@@ -218,7 +218,7 @@ def check_install(backend_choice: str, model: str) -> int:
         ok = ok and good
         print(f"  {'✓' if good else '✗'} {text}" + (f"\n      → {fix}" if fix and not good else ""))
 
-    print(f"AVTool CMOS {__version__} — installation check\n")
+    print(f"AV Transcriber {__version__} — installation check\n")
     py_ok = sys.version_info >= (3, 10)
     line(py_ok, f"Python {platform.python_version()} ({platform.machine()})",
          "Python 3.10 or newer is needed; run the setup script")
@@ -231,7 +231,8 @@ def check_install(backend_choice: str, model: str) -> int:
         if found:
             try:
                 version = subprocess.run([found, "-version"], capture_output=True, text=True,
-                                         timeout=20).stdout.split("\n", 1)[0]
+                                         timeout=20, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                                         ).stdout.split("\n", 1)[0]
             except (OSError, subprocess.SubprocessError):
                 found = None
         line(bool(found), f"{tool}: {version or 'not found'}", "brew install ffmpeg (Mac)")

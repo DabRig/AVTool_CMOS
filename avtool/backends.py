@@ -27,6 +27,8 @@ from typing import Callable, Optional
 
 # Never send usage statistics anywhere.
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+# Windows without Developer Mode can't make symlinks; the model cache copies instead. Fine.
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 MLX_MODELS = {
     "tiny": "mlx-community/whisper-tiny-mlx",
@@ -110,6 +112,9 @@ def _add_windows_cuda_dlls() -> None:
             for bin_dir in nvidia.glob("*/bin"):
                 with contextlib.suppress(OSError):
                     os.add_dll_directory(str(bin_dir))
+                # ctranslate2 loads cuDNN by name at run time, which searches PATH.
+                if str(bin_dir) not in os.environ.get("PATH", ""):
+                    os.environ["PATH"] = str(bin_dir) + os.pathsep + os.environ.get("PATH", "")
 
 
 def cuda_device_count() -> int:

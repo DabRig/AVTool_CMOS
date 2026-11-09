@@ -71,6 +71,16 @@ def make_speech(ff: str, work: Path, source: str | None, start: float, seconds: 
             run([ff, "-y", "-nostdin", "-i", str(aiff), "-af", "adelay=1000:all=1,apad=pad_dur=1",
                  "-ac", "2", "-ar", "44100", "-c:a", "pcm_s16le", str(speech)])
             return speech, "Mac 'say' voice"
+    if sys.platform == "win32":
+        # Windows' built-in voice (System.Speech), saved straight to a WAV file.
+        raw = work / "speech_raw.wav"
+        ps = ("Add-Type -AssemblyName System.Speech; "
+              "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+              f"$s.SetOutputToWaveFile('{raw}'); $s.Speak('{SCRIPT.replace(chr(39), chr(39) * 2)}'); $s.Dispose()")
+        if run(["powershell", "-NoProfile", "-Command", ps]) and raw.exists():
+            run([ff, "-y", "-nostdin", "-i", str(raw), "-af", "adelay=1000:all=1,apad=pad_dur=1",
+                 "-ac", "2", "-ar", "44100", "-c:a", "pcm_s16le", str(speech)])
+            return speech, "Windows voice"
     run([ff, "-y", "-nostdin", "-f", "lavfi", "-i", "sine=frequency=330:duration=8",
          "-af", "volume=0.5", "-ac", "2", "-ar", "44100", "-c:a", "pcm_s16le", str(speech)])
     return speech, "tone (no speech available on this computer)"

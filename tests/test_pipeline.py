@@ -275,3 +275,28 @@ def test_wav_loaded_without_ffmpeg(tmp_path):
     audio = load_wav_array(wav)
     assert audio.dtype == np.float32 and audio.shape == (16000,)
     assert abs(float(audio.max()) - 16000 / 32768) < 1e-3
+
+
+def test_windows_ffmpeg_folders(monkeypatch, tmp_path):
+    """winget puts ffmpeg in its Links folder or a Gyan.FFmpeg package folder."""
+    from avtool import media
+    bin_dir = tmp_path / "Microsoft" / "WinGet" / "Packages" / "Gyan.FFmpeg_abc" / "ffmpeg-8.0-full_build" / "bin"
+    bin_dir.mkdir(parents=True)
+    (bin_dir / "ffmpeg.exe").write_bytes(b"")
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    monkeypatch.setattr(media.sys, "platform", "win32")
+    monkeypatch.setattr(media.shutil, "which", lambda name: None)
+    dirs = media.windows_tool_dirs()
+    assert str(tmp_path / "Microsoft" / "WinGet" / "Links") in dirs
+    assert str(bin_dir) in dirs
+    assert media.find_tool("ffmpeg") == str(bin_dir / "ffmpeg.exe")
+
+
+def test_windows_long_paths(monkeypatch, tmp_path):
+    """Paths over ~240 characters get Windows' \\\\?\\ prefix; short ones don't."""
+    from avtool import writers
+    monkeypatch.setattr(writers.sys, "platform", "win32")
+    short = writers.long_path(tmp_path / "a.txt")
+    assert not str(short).startswith("\\\\?\\")
+    deep = tmp_path / ("x" * 120) / ("y" * 120) / "IMG_0042.MOV.timestamped.txt"
+    assert str(writers.long_path(deep)).startswith("\\\\?\\")

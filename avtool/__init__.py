@@ -1,3 +1,4 @@
-"""AVTool CMOS — free, offline batch transcription for video and audio files."""
+"""AV Transcriber — free, offline batch transcription for video and audio files."""
 
-__version__ = "1.2.0"  # V1.2: Finder ffmpeg fix, guided tour, Help Center
+APP_NAME = "AV Transcriber"
+__version__ = "2.0.0"  # V2.0: AV Transcriber name, glass UI, bigger type, Windows
