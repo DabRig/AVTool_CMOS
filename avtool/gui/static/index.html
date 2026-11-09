@@ -436,7 +436,8 @@
         <h2>Troubleshooting</h2>
         <dl class="defs">
           <dt>Every file FAILED with "No such file or directory: 'ffmpeg'"</dt><dd>Fixed in V1.2. Run the update (see FAQ), then press START again.</dd>
-          <dt data-os="win">ENGINE says CPU instead of CUDA · NVIDIA GPU</dt><dd data-os="win">Update the NVIDIA driver (GeForce Experience or nvidia.com/drivers), restart, then run <code>setup_windows.bat</code> again. It still works on CPU, just slower; DRAFT or BALANCED quality helps.</dd>
+          <dt data-os="win">ENGINE says CPU, or CPU · GPU UNAVAILABLE</dt><dd data-os="win">The first START of each session runs a quick, safe GPU check; if the NVIDIA card can't be used, AV Transcriber switches to the CPU instead of crashing, and the LOG says why. Usually the fix is to update the NVIDIA driver (NVIDIA app / GeForce Experience or nvidia.com/drivers, version 528 or newer), restart, then run <code>setup_windows.bat</code> again. It still works on CPU, just slower; DRAFT or BALANCED quality helps.</dd>
+          <dt data-os="win">The app folder is inside OneDrive</dt><dd data-os="win">OneDrive tries to upload the app's ~3 GB of engine files and can make them online-only, which breaks the app. Move the whole folder to <code>C:\Users\(you)\AV Transcriber</code>, then double-click <code>setup_windows.bat</code> there (it recreates the shortcuts).</dd>
           <dt data-os="win">Windows says "Windows protected your PC"</dt><dd data-os="win">That's SmartScreen being careful with downloaded scripts. Click <b>More info › Run anyway</b>. To avoid it, right-click the ZIP › Properties › tick <b>Unblock</b> before extracting.</dd>
           <dt>ENGINE light is red</dt><dd>Something isn't installed. <span data-os="mac">In Terminal: <code>cd ~/Documents/AVTool &amp;&amp; bash setup_mac.command</code>.</span><span data-os="win">Double-click <code>setup_windows.bat</code> in the AV Transcriber folder.</span></dd>
           <dt>"Can't write to …"</dt><dd>The drive is read-only on this Mac (often NTFS-formatted). Choose SAVE TRANSCRIPTS › CUSTOM FOLDER.</dd>
@@ -474,7 +475,7 @@
         <div data-os="win">
           <h3>Windows 10 / 11</h3>
           <ol class="steps small">
-            <li>Right-click the downloaded ZIP › Properties › tick <b>Unblock</b> › OK, then extract it to <b>Documents\AV Transcriber</b>.</li>
+            <li>Right-click the downloaded ZIP › Properties › tick <b>Unblock</b> › OK, then extract it to <b>C:\Users\(you)\AV Transcriber</b> (outside OneDrive).</li>
             <li>Double-click <b>setup_windows.bat</b> (one time, about 15–20 minutes: it installs ffmpeg, Python, the NVIDIA engine and the speech model).</li>
             <li>Open <b>AV Transcriber</b> from the Start menu or the desktop shortcut. Right-click its taskbar icon › <b>Pin to taskbar</b> to keep it handy.</li>
             <li>To update later: double-click <b>update_windows.bat</b>.</li>

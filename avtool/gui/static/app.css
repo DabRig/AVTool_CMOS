@@ -728,3 +728,7 @@ mark.hl { background: rgba(255, 195, 90, .35); color: inherit; border-radius: 2p
 
 /* Help text written for one system only. */
 html.os-win [data-os="mac"], html:not(.os-win) [data-os="win"] { display: none !important; }
+
+/* Windows (Edge) paints the scrollbar corner white unless told otherwise. */
+::-webkit-scrollbar-corner { background: transparent; }
+.console { overflow-x: hidden; overflow-wrap: anywhere; }

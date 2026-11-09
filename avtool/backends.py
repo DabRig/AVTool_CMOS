@@ -336,6 +336,68 @@ def _report_progress(module, progress: Optional[ProgressFn]):
 
 # ---------------------------------------------------------------- faster-whisper
 
+_GPU_TEST_SCRIPT = r"""
+import sys
+import numpy as np
+sys.path.insert(0, sys.argv[2])
+from avtool.backends import _add_windows_cuda_dlls
+_add_windows_cuda_dlls()
+from faster_whisper import WhisperModel
+noise = (np.random.default_rng(0).standard_normal(16000 * 2) * 0.01).astype(np.float32)
+for compute_type in ("float16", "float32"):  # older cards may lack fast float16
+    try:
+        model = WhisperModel(sys.argv[1], device="cuda", compute_type=compute_type)
+    except ValueError as exc:
+        if "float16" in str(exc) and compute_type == "float16":
+            continue
+        raise
+    segments, _ = model.transcribe(noise, language="en", vad_filter=False, word_timestamps=True)
+    list(segments)
+    print("GPU-OK", compute_type)
+    break
+"""
+_gpu_test_result: dict = {}
+
+
+def gpu_selftest(model_path: str) -> tuple[bool, str]:
+    """Try the NVIDIA engine in a separate, throwaway process first.
+
+    Returns (works, detail): the compute type to use if it works, else the reason.
+
+    A missing or mismatched NVIDIA library (cuDNN, cuBLAS) can make the GPU engine
+    crash the whole program with no error to catch. Testing in a child process
+    means only the child dies; the app then uses the CPU instead. Runs once per
+    session (about 10-20 seconds, while the model loads).
+    """
+    if os.environ.get("AVTOOL_SKIP_GPU_TEST"):
+        return True, "float16"
+    if model_path in _gpu_test_result:
+        return _gpu_test_result[model_path]
+    project = str(Path(__file__).resolve().parent.parent)
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", _GPU_TEST_SCRIPT, model_path, project],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        ok = proc.returncode == 0 and "GPU-OK" in proc.stdout
+        lines = [l for l in (proc.stderr or "").strip().splitlines() if l.strip()]
+        if ok:
+            words = proc.stdout.split("GPU-OK", 1)[1].split()
+            detail = words[0] if words else "float16"  # the compute type that worked
+        else:
+            detail = lines[-1] if lines else f"GPU test exited with code {proc.returncode}"
+    except subprocess.TimeoutExpired:
+        ok, detail = False, "GPU test took too long"
+    _gpu_test_result[model_path] = (ok, detail)
+    return ok, detail
+
+
+def _looks_like_gpu_failure(exc: BaseException) -> bool:
+    text = str(exc).lower()
+    return any(k in text for k in ("cuda", "cudnn", "cublas", "out of memory", "gpu", "device"))
+
+
 class FasterWhisperBackend(Backend):
     def __init__(self, model: str, device: str):
         super().__init__(model)
@@ -365,10 +427,23 @@ class FasterWhisperBackend(Backend):
             self.local_path = download_model(self.model_name)
         _offline_mode()
 
+    def _use_cpu(self, reason: str) -> None:
+        print(f"NVIDIA GPU unavailable ({reason}). Using the CPU instead (works, slower).")
+        self.device, self.compute_type = "cpu", "int8"
+        self.name = "faster-whisper CPU"
+        self.model = None
+
     def load(self) -> None:
         self.ensure_model()
         from faster_whisper import WhisperModel
         _add_windows_cuda_dlls()
+        if self.device == "cuda":
+            print("Checking the NVIDIA GPU (first start of each session only)...")
+            ok, detail = gpu_selftest(self.local_path)
+            if not ok:
+                self._use_cpu(detail)
+            elif detail in ("float16", "float32"):
+                self.compute_type = detail
         try:
             self.model = WhisperModel(
                 self.local_path, device=self.device, compute_type=self.compute_type,
@@ -377,16 +452,28 @@ class FasterWhisperBackend(Backend):
         except Exception as exc:
             if self.device != "cuda":
                 raise
-            print(f"NVIDIA GPU didn't start ({exc}). Falling back to CPU (slower).")
-            self.device, self.compute_type = "cpu", "int8"
-            self.name = "faster-whisper CPU"
+            self._use_cpu(f"didn't start: {exc}")
             self.load()
 
     def transcribe(self, wav, duration, language, prompt, progress) -> Transcript:
         if self.model is None:
             self.load()
+        try:
+            return self._transcribe(wav, duration, language, prompt, progress)
+        except Exception as exc:
+            # e.g. the graphics card runs out of memory mid-file: redo this file on the CPU.
+            if self.device != "cuda" or not _looks_like_gpu_failure(exc):
+                raise
+            self._use_cpu(f"failed mid-file: {exc}")
+            self.load()
+            return self._transcribe(wav, duration, language, prompt, progress)
+
+    def _transcribe(self, wav, duration, language, prompt, progress) -> Transcript:
         seg_iter, info = self.model.transcribe(
-            str(wav),
+            # Hand over the sound itself. Given a file name, faster-whisper opens
+            # it with PyAV, and PyAV 19 removed an option faster-whisper 1.2.1
+            # still passes ("metadata_errors"), so every file failed on Windows.
+            load_wav_array(wav),
             language=language,
             beam_size=5,
             vad_filter=True,

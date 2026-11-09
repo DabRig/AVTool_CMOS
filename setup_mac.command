@@ -70,7 +70,7 @@ if [[ -x .venv/bin/python ]]; then
 fi
 [[ -x .venv/bin/python ]] || "$PY" -m venv .venv
 .venv/bin/python -m pip install --upgrade pip --quiet
-.venv/bin/python -m pip install -r "$REQS" --quiet
+.venv/bin/python -m pip install -r "$REQS" -c constraints.txt --quiet  # tested versions only
 ok "Python packages installed ($REQS)"
 
 # --- 4. The model -------------------------------------------------------------

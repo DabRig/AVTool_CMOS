@@ -145,3 +145,27 @@ parsing. Real transcription quality and speed can only be judged on the Mac.
   wheel (ctranslate2 4.8.5, cuBLAS 12.9, cuDNN 9.28, pythonnet 3.2.1; proxy_tools is
   pure-Python source). ⏳ **Not yet run on real Windows**: the setup script, the
   native window, CUDA speed and drag-and-drop need a first run on your PCs.
+
+## 10. V2.0.1: first Windows run
+
+- **Bug (Windows, every file failed):** `open() got an unexpected keyword argument
+  'metadata_errors'`. faster-whisper 1.2.1 passes an option to PyAV that PyAV 19
+  removed, and a fresh install picks up the newest PyAV. **Fixed** by handing
+  faster-whisper the audio array (the same approach that fixed the Mac in V1.2);
+  PyAV is no longer used to read audio. Reproduced on this machine with the full
+  tool and an .m4a file, then shown fixed.
+- **Why the tests missed it:** they used a stand-in engine. New `tests/test_engine.py`
+  runs the **real faster-whisper engine** with a tiny randomly-initialised model built
+  locally (`tests/tiny_whisper.py`): audio input, voice detection, decoding, word
+  timings and glossary hotwords. It fails with the exact Windows error on the old code.
+- **Locked versions:** `constraints.txt` pins the tested library versions, and both
+  setups install with it, so a future library release can't break the app the same
+  way. Checked: resolves for Windows (win_amd64, Python 3.12); on macOS every pinned
+  version exists for Apple Silicon and fits mlx-whisper's needs (numba allows numpy < 2.6).
+- **GPU safety net:** a throwaway-process GPU check on the first START of each session
+  (a missing cuDNN/cuBLAS can otherwise crash the app outright), a float32 fallback
+  for cards without fast float16, a CPU fallback with the reason logged, a mid-file
+  CPU retry if the GPU fails, and the ENGINE light updates to match.
+- **Windows setup:** warns when the app folder is inside OneDrive.
+- **Cosmetic:** the white scrollbar corner in the LOG panel on Windows is gone.
+- ⏳ Still to confirm on your PC: real CUDA speed and quality.

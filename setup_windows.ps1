@@ -34,6 +34,21 @@ Write-Host "  After this, transcription works fully offline."
 
 if (-not [Environment]::Is64BitOperatingSystem) { Fail "AV Transcriber needs 64-bit Windows 10 or 11." }
 
+# OneDrive would try to upload the app's ~3 GB of engine files (.venv) and may
+# swap them for online-only placeholders, which breaks the app. Recommend a
+# folder outside OneDrive; carry on if the user prefers to stay.
+if ($PSScriptRoot -match "\\OneDrive") {
+    Note "This folder is inside OneDrive: $PSScriptRoot"
+    Note "OneDrive would upload about 3 GB of engine files and can make them online-only."
+    Note "Recommended: move the whole folder to $env:USERPROFILE\AV Transcriber"
+    Note "(then run setup_windows.bat again from there)."
+    $answer = Read-Host "  Continue here anyway? Type Y and press Enter to continue, or just Enter to stop"
+    if ($answer -notmatch "^[Yy]") {
+        Read-Host "Stopped. Move the folder, then double-click setup_windows.bat there. Press Enter to close"
+        exit 0
+    }
+}
+
 # Files from a downloaded ZIP carry a 'from the internet' mark; clear it so
 # Windows doesn't warn about each script again.
 Get-ChildItem -LiteralPath $PSScriptRoot -Recurse -File -ErrorAction SilentlyContinue |
@@ -129,7 +144,7 @@ if (-not (Test-Path -LiteralPath $venvPy)) {
 if ($reqs -eq "requirements-nvidia.txt") {
     Write-Host "  Downloading the NVIDIA libraries (about 1.5 GB) - this is the slow part."
 }
-& $venvPy -m pip install -r $reqs --quiet --disable-pip-version-check
+& $venvPy -m pip install -r $reqs -c constraints.txt --quiet --disable-pip-version-check  # tested versions only
 if ($LASTEXITCODE -ne 0) { Fail "Installing packages failed (see above). Check the internet connection and run setup again." }
 Ok "Python packages installed ($reqs)"
 

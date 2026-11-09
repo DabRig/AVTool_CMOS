@@ -94,7 +94,7 @@ class AppState:
             "text_scale": 1.2,
         }
         try:
-            saved = json.loads(GUI_SETTINGS.read_text())
+            saved = json.loads(GUI_SETTINGS.read_text(encoding="utf-8"))
             s.update({k: v for k, v in saved.items() if k in EDITABLE})
         except (OSError, ValueError):
             pass
@@ -127,7 +127,7 @@ class AppState:
             if "json" not in self.settings["formats"]:
                 self.settings["formats"].append("json")  # resume marker, always written
             try:
-                GUI_SETTINGS.write_text(json.dumps(self.settings, indent=2))
+                GUI_SETTINGS.write_text(json.dumps(self.settings, indent=2), encoding="utf-8")
             except OSError:
                 pass
             self._refresh_done_flags()
@@ -329,6 +329,9 @@ class AppState:
                 self.add_log(data.get("text", ""))
             elif kind == "loading":
                 self.loading = True
+            elif kind == "engine":
+                if "CPU" in data.get("label", "") and self.engine.get("backend") == "cuda":
+                    self.engine = {**self.engine, "backend": "cpu", "label": "CPU · GPU UNAVAILABLE"}
             elif kind == "plan":
                 for j in data["jobs"]:
                     item = self._find(j["path"])

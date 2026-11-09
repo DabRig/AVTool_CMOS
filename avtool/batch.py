@@ -404,6 +404,7 @@ def _run(settings: Settings) -> int:
             say("Loading the model (the first time can take a minute)...")
             emit("loading", label=backend.label())
             backend.load()
+            emit("engine", label=backend.label())  # may have switched GPU -> CPU
             logline(f"RUN START | AV Transcriber {__version__} | {backend.label()} | lang={settings.lang} | "
                     f"{len(pending)} file(s), {human_duration(total_audio)}")
 

@@ -63,7 +63,9 @@ and transcripts.
    branch `claude/optimistic-thompson-as38s7`).
 2. **Unblock it** so Windows doesn't warn about every script: right-click the ZIP ›
    **Properties** › tick **Unblock** › **OK**.
-3. **Extract** it and rename the folder to **AV Transcriber**, inside **Documents**.
+3. **Extract** it and rename the folder to **AV Transcriber**. Put it in your user
+   folder (`C:\Users\you\AV Transcriber`), **not** inside OneDrive: OneDrive would try
+   to upload the app's ~3 GB of engine files and can make them online-only.
 4. **Double-click `setup_windows.bat`.** About 15–20 minutes. It installs ffmpeg
    and Python 3.12 with winget (Windows' own installer), detects your **NVIDIA**
    card and installs the fast CUDA engine (about 1.5 GB of NVIDIA libraries),

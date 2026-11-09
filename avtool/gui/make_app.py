@@ -76,7 +76,7 @@ def build(dest_dir: Path = PROJECT_DIR) -> Path:
     resources.mkdir(parents=True)
 
     launcher = macos / EXECUTABLE
-    launcher.write_text(LAUNCHER.format(project=_shell_quote(str(PROJECT_DIR))))
+    launcher.write_text(LAUNCHER.format(project=_shell_quote(str(PROJECT_DIR))), encoding="utf-8")
     launcher.chmod(0o755)
 
     has_icon = make_icns(ICON_PNG, resources / "AppIcon.icns")
